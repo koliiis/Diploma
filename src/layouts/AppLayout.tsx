@@ -4,10 +4,10 @@ import { AppHeader } from '../components/layout/AppHeader'
 
 export function AppLayout() {
   return (
-    <div>
+    <div className="min-h-screen flex flex-col bg-gray-100">
       <AppHeader />
 
-      <main>
+      <main className="flex-1 p-24px">
         <Outlet />
       </main>
 
