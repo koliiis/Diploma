@@ -40,19 +40,25 @@ messagesRouter.post('/', async (req, res) => {
 })
 
 messagesRouter.get('/', async (req, res) => {
-  try {
-    const { chatId } = req.query
-
-    const filter = chatId ? { chatId } : {}
-
-    const messages = await MessageModel.find(filter)
-      .populate('authorId', 'fullName email')
-      .populate('chatId', 'title')
-      .sort({ createdAt: 1 })
-
-    res.json(messages)
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: 'Failed to fetch messages' })
-  }
-})
+    try {
+      const chatId = req.query.chatId
+  
+      if (chatId && typeof chatId !== 'string') {
+        return res.status(400).json({
+          error: 'chatId must be a string',
+        })
+      }
+  
+      const filter = chatId ? { chatId } : {}
+  
+      const messages = await MessageModel.find(filter)
+        .populate('authorId', 'fullName email')
+        .populate('chatId', 'title')
+        .sort({ createdAt: 1 })
+  
+      res.json(messages)
+    } catch (error) {
+      console.error(error)
+      res.status(500).json({ error: 'Failed to fetch messages' })
+    }
+  })

@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { createMessage, getMessages, type Message } from '../api/messages'
+import {
+    saveMessages,
+    loadMessages as loadCachedMessages,
+  } from '../utils/messagesStorage'
 
 export function ChatPage() {
   const { chatId } = useParams()
@@ -12,10 +16,20 @@ export function ChatPage() {
 
   async function loadMessages() {
     if (!chatId) return
-
-    const data = await getMessages(chatId)
-    setMessages(data)
-    setIsLoading(false)
+  
+    try {
+      const data = await getMessages(chatId)
+  
+      setMessages(data)
+      saveMessages(chatId, data)
+    } catch {
+      console.log('Offline mode: loading cached messages for chat', chatId)
+  
+      const cached = loadCachedMessages(chatId)
+      setMessages(cached)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   useEffect(() => {
