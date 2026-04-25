@@ -24,9 +24,9 @@ Backend:
 ## Запуск
 
 ### frontend
-cd client
-npm install
-npm run dev
+- cd client
+- npm install
+- npm run dev
 
 ### backend
 cd server
