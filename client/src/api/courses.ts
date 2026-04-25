@@ -1,3 +1,5 @@
+import { API_URL } from '../config/api'
+
 export type Course = {
     _id: string
     title: string
@@ -13,7 +15,7 @@ export type Course = {
   }
   
   export async function getCourses(): Promise<Course[]> {
-    const response = await fetch('http://127.0.0.1:4000/api/courses')
+    const response = await fetch(`${API_URL}/api/courses`)
   
     if (!response.ok) {
       throw new Error('Failed to fetch courses')

@@ -1,3 +1,5 @@
+import { API_URL } from '../config/api'
+
 export type UserRole = 'student' | 'teacher'
 
 export type User = {
@@ -10,7 +12,7 @@ export type User = {
 }
 
 export async function getUsers(): Promise<User[]> {
-  const response = await fetch('http://127.0.0.1:4000/api/users')
+  const response = await fetch(`${API_URL}/api/users`)
 
   if (!response.ok) {
     throw new Error('Failed to fetch users')
@@ -20,7 +22,7 @@ export async function getUsers(): Promise<User[]> {
 }
 
 export async function createUser(): Promise<User> {
-    const response = await fetch('http://127.0.0.1:4000/api/users', {
+    const response = await fetch(`${API_URL}/api/users`, {
       method: 'POST',
     })
   
