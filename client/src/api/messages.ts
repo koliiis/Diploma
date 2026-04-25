@@ -1,3 +1,5 @@
+import { API_URL } from '../config/api'
+
 export type Message = {
     _id: string
     content: string
@@ -15,8 +17,8 @@ export type Message = {
   
   export async function getMessages(chatId?: string): Promise<Message[]> {
     const url = chatId
-      ? `http://127.0.0.1:4000/api/messages?chatId=${chatId}`
-      : 'http://127.0.0.1:4000/api/messages'
+      ? `${API_URL}/api/messages?chatId=${chatId}`
+      : `${API_URL}/api/messages`
   
     const response = await fetch(url)
   
@@ -31,7 +33,7 @@ export type Message = {
     chatId: string
     content: string
   }): Promise<Message> {
-    const response = await fetch('http://127.0.0.1:4000/api/messages', {
+    const response = await fetch(`${API_URL}/api/messages`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
