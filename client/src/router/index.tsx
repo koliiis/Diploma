@@ -7,6 +7,7 @@ import { DashboardPage } from '../pages/DashboardPage'
 import { LoginPage } from '../pages/LoginPage'
 import { ProfilePage } from '../pages/ProfilePage'
 import { ProtectedRoute } from './ProtectedRoute'
+import { ChatPage } from '../pages/ChatPage'
 
 export const router = createBrowserRouter([
   {
@@ -37,6 +38,10 @@ export const router = createBrowserRouter([
           {
             path: 'chats',
             element: <ChatsPage />,
+          },
+          {
+            path: 'chats/:chatId',
+            element: <ChatPage />,
           },
           {
             path: 'profile',
