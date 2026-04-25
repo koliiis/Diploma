@@ -8,7 +8,7 @@ usersRouter.post('/', async (_req, res) => {
     const user = await UserModel.create({
       fullName: 'Test User',
       email: `test-${Date.now()}@example.com`,
-      role: 'student',
+      role: 'teacher',
     })
 
     res.json(user)
