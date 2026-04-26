@@ -17,16 +17,22 @@ export function ChatPage() {
   async function loadMessages() {
     if (!chatId) return
   
+    const cached = loadCachedMessages(chatId)
+  
+    if (cached.length > 0) {
+      setMessages(cached)
+      setIsLoading(false)
+    }
+  
     try {
       const data = await getMessages(chatId)
   
       setMessages(data)
       saveMessages(chatId, data)
     } catch {
-      console.log('Offline mode: loading cached messages for chat', chatId)
-  
-      const cached = loadCachedMessages(chatId)
-      setMessages(cached)
+      if (cached.length === 0) {
+        console.log('Offline mode: no cached messages')
+      }
     } finally {
       setIsLoading(false)
     }
