@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getChats, type Chat } from '../api/chats'
 import { Link } from 'react-router-dom'
+import { saveChats, loadChats } from '../utils/chatsStorage'
 
 export function ChatsPage() {
   const [chats, setChats] = useState<Chat[]>([])
@@ -8,18 +9,29 @@ export function ChatsPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    async function loadChats() {
+    async function loadChatsData() {
+      const cached = loadChats()
+  
+      if (cached.length > 0) {
+        setChats(cached)
+        setIsLoading(false)
+      }
+  
       try {
         const data = await getChats()
         setChats(data)
+        saveChats(data)
+        setError(null)
       } catch {
-        setError('Не вдалося завантажити чати')
+        if (cached.length === 0) {
+          setError('Не вдалося завантажити чати')
+        }
       } finally {
         setIsLoading(false)
       }
     }
-
-    loadChats()
+  
+    loadChatsData()
   }, [])
 
   return (

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getCourses, type Course } from '../api/courses'
+import { loadCourses, saveCourses } from '../utils/coursesStorage'
 
 export function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([])
@@ -7,34 +8,39 @@ export function CoursesPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    async function loadCourses() {
+    async function loadCoursesData() {
+      const cached = loadCourses()
+  
+      if (cached.length > 0) {
+        setCourses(cached)
+        setIsLoading(false)
+      }
+  
       try {
         const data = await getCourses()
         setCourses(data)
+        saveCourses(data)
+        setError(null)
       } catch {
-        setError('Не вдалося завантажити курси')
+        if (cached.length === 0) {
+          setError('Не вдалося завантажити курси')
+        }
       } finally {
         setIsLoading(false)
       }
     }
-
-    loadCourses()
+  
+    loadCoursesData()
   }, [])
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900">
-        Courses
-      </h1>
+      <h1 className="text-2xl font-bold text-gray-900">Courses</h1>
 
       <div className="mt-6">
-        {isLoading && (
-          <p className="text-sm text-gray-500">Завантаження...</p>
-        )}
+        {isLoading && <p className="text-sm text-gray-500">Завантаження...</p>}
 
-        {error && (
-          <p className="text-sm text-red-600">{error}</p>
-        )}
+        {error && <p className="text-sm text-red-600">{error}</p>}
 
         {!isLoading && !error && (
           <div className="space-y-4">
@@ -52,12 +58,8 @@ export function CoursesPage() {
                 </p>
 
                 <div className="mt-3 text-sm text-gray-500">
-                  <p>
-                    Викладач: {course.teacherId.fullName}
-                  </p>
-                  <p>
-                    Email: {course.teacherId.email}
-                  </p>
+                  <p>Викладач: {course.teacherId.fullName}</p>
+                  <p>Email: {course.teacherId.email}</p>
                 </div>
               </div>
             ))}
