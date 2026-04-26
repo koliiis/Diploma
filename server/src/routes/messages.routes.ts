@@ -1,10 +1,10 @@
 import { Router } from 'express'
 import { MessageModel } from '../models/message.model'
-import { UserModel } from '../models/user.model'
+import { authMiddleware, AuthRequest } from '../middleware/auth.middleware'
 
 export const messagesRouter = Router()
 
-messagesRouter.post('/', async (req, res) => {
+messagesRouter.post('/', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const { chatId, content } = req.body
 
@@ -14,17 +14,17 @@ messagesRouter.post('/', async (req, res) => {
       })
     }
 
-    const author = await UserModel.findOne()
+    const authorId = req.user?.userId
 
-    if (!author) {
-      return res.status(400).json({
-        error: 'Create a user first',
+    if (!authorId) {
+      return res.status(401).json({
+        error: 'Unauthorized',
       })
     }
 
     const message = await MessageModel.create({
       chatId,
-      authorId: author._id,
+      authorId,
       content,
     })
 
@@ -40,25 +40,47 @@ messagesRouter.post('/', async (req, res) => {
 })
 
 messagesRouter.get('/', async (req, res) => {
-    try {
-      const chatId = req.query.chatId
-  
-      if (chatId && typeof chatId !== 'string') {
-        return res.status(400).json({
-          error: 'chatId must be a string',
-        })
-      }
-  
-      const filter = chatId ? { chatId } : {}
-  
-      const messages = await MessageModel.find(filter)
-        .populate('authorId', 'fullName email')
-        .populate('chatId', 'title')
-        .sort({ createdAt: 1 })
-  
-      res.json(messages)
-    } catch (error) {
-      console.error(error)
-      res.status(500).json({ error: 'Failed to fetch messages' })
+  try {
+    const { chatId, before, limit = '30' } = req.query
+
+    if (chatId && typeof chatId !== 'string') {
+      return res.status(400).json({
+        error: 'chatId must be a string',
+      })
     }
-  })
+
+    if (before && typeof before !== 'string') {
+      return res.status(400).json({
+        error: 'before must be a string',
+      })
+    }
+
+    const parsedLimit = Math.min(Number(limit) || 30, 50)
+
+    const filter: {
+      chatId?: string
+      createdAt?: { $lt: Date }
+    } = {}
+
+    if (chatId) {
+      filter.chatId = chatId
+    }
+
+    if (before) {
+      filter.createdAt = {
+        $lt: new Date(before),
+      }
+    }
+
+    const messages = await MessageModel.find(filter)
+      .populate('authorId', 'fullName email avatarUrl')
+      .populate('chatId', 'title')
+      .sort({ createdAt: -1 })
+      .limit(parsedLimit)
+
+    res.json(messages.reverse())
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Failed to fetch messages' })
+  }
+})

@@ -1,16 +1,37 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createMessage, getMessages, type Message } from '../api/messages'
 import {
   saveMessages,
   loadMessages as loadCachedMessages,
 } from '../utils/messagesStorage'
+import { useAuthStore } from '../store/authStore'
+
+function mergeMessagesByIdChronological(
+  a: Message[],
+  b: Message[],
+): Message[] {
+  return [...a, ...b]
+    .filter(
+      (msg, index, self) =>
+        index === self.findIndex((m) => m._id === msg._id),
+    )
+    .sort(
+      (x, y) =>
+        new Date(x.createdAt).getTime() - new Date(y.createdAt).getTime(),
+    )
+}
 
 export function useChatMessages(chatId?: string) {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
+  const [isLoadingEarlier, setIsLoadingEarlier] = useState(false)
+  const [hasMoreMessages, setHasMoreMessages] = useState(true)
 
-  async function loadMessages() {
+  const currentUser = useAuthStore((s) => s.user)
+  const syncRef = useRef<() => Promise<void>>(async () => {})
+
+  const loadMessages = useCallback(async () => {
     if (!chatId) return
 
     const cached = loadCachedMessages(chatId)
@@ -21,9 +42,16 @@ export function useChatMessages(chatId?: string) {
     }
 
     try {
-      const data = await getMessages(chatId)
-      setMessages(data)
-      saveMessages(chatId, data)
+      const data = await getMessages({
+        chatId,
+        limit: 30,
+      })
+
+      const latestCached = loadCachedMessages(chatId)
+      const merged = mergeMessagesByIdChronological(latestCached, data)
+
+      setMessages(merged)
+      saveMessages(chatId, merged)
     } catch {
       if (cached.length === 0) {
         console.log('Offline mode: no cached messages')
@@ -31,7 +59,46 @@ export function useChatMessages(chatId?: string) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [chatId])
+
+  const syncPendingMessages = useCallback(async () => {
+    if (!chatId) return
+
+    const cached = loadCachedMessages(chatId)
+    const pendingMessages = cached.filter(
+      (m) => m.localStatus === 'pending',
+    )
+
+    if (pendingMessages.length === 0) return
+
+    let currentMessages = cached
+
+    for (const pendingMessage of pendingMessages) {
+      try {
+        const savedMessage = await createMessage({
+          chatId,
+          content: pendingMessage.content,
+        })
+
+        currentMessages = currentMessages.map((m) =>
+          m._id === pendingMessage._id
+            ? { ...savedMessage, localStatus: 'sent' as const }
+            : m,
+        )
+
+        setMessages(currentMessages)
+        saveMessages(chatId, currentMessages)
+      } catch {
+        break
+      }
+    }
+
+    await loadMessages()
+  }, [chatId, loadMessages])
+
+  useEffect(() => {
+    syncRef.current = syncPendingMessages
+  }, [syncPendingMessages])
 
   const sendMessage = async (text: string) => {
     if (!chatId) return
@@ -46,9 +113,9 @@ export function useChatMessages(chatId?: string) {
       content: trimmedText,
       createdAt: new Date().toISOString(),
       authorId: {
-        _id: 'local-user',
-        fullName: 'You',
-        email: 'local@example.com',
+        _id: currentUser?._id ?? 'local-user',
+        fullName: currentUser?.fullName ?? 'You',
+        email: currentUser?.email ?? 'local@example.com',
       },
       chatId: {
         _id: chatId,
@@ -98,61 +165,63 @@ export function useChatMessages(chatId?: string) {
     }
   }
 
-  const syncPendingMessages = async () => {
-    if (!chatId) return
+  const loadEarlierMessages = async () => {
+    if (!chatId || messages.length === 0) return
 
-    const cached = loadCachedMessages(chatId)
-    const pendingMessages = cached.filter(
-      (m) => m.localStatus === 'pending',
-    )
+    const oldestMessage = messages[0]
 
-    if (pendingMessages.length === 0) return
+    try {
+      setIsLoadingEarlier(true)
 
-    let currentMessages = cached
+      const earlierMessages = await getMessages({
+        chatId,
+        before: oldestMessage.createdAt,
+        limit: 30,
+      })
 
-    for (const pendingMessage of pendingMessages) {
-      try {
-        const savedMessage = await createMessage({
-          chatId,
-          content: pendingMessage.content,
-        })
-
-        currentMessages = currentMessages.map((m) =>
-          m._id === pendingMessage._id
-            ? { ...savedMessage, localStatus: 'sent' as const }
-            : m,
-        )
-
-        setMessages(currentMessages)
-        saveMessages(chatId, currentMessages)
-      } catch {
-        break
+      if (earlierMessages.length === 0) {
+        setHasMoreMessages(false)
+        return
       }
-    }
 
-    await loadMessages()
+      const mergedMessages = [...earlierMessages, ...messages]
+
+      setMessages(mergedMessages)
+      saveMessages(chatId, mergedMessages)
+    } finally {
+      setIsLoadingEarlier(false)
+    }
   }
 
   useEffect(() => {
-    loadMessages()
-  }, [chatId])
+    if (!chatId) {
+      return
+    }
+
+    const run = () => {
+      void loadMessages()
+    }
+    queueMicrotask(run)
+  }, [chatId, loadMessages])
 
   useEffect(() => {
-    function handleOnline() {
-      syncPendingMessages()
+    const handleOnline = () => {
+      void syncRef.current()
     }
 
     window.addEventListener('online', handleOnline)
-
     return () => {
       window.removeEventListener('online', handleOnline)
     }
-  }, [chatId])
+  }, [])
 
   return {
     messages,
     isLoading,
     isSending,
+    isLoadingEarlier,
+    hasMoreMessages,
     sendMessage,
+    loadEarlierMessages,
   }
 }
