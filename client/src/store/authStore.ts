@@ -1,19 +1,19 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-type UserRole = 'student' | 'teacher'
-
 type User = {
-  id: string
+  _id: string
   fullName: string
   email: string
-  role: UserRole
+  role: 'student' | 'teacher'
+  avatarUrl?: string
 }
 
 type AuthState = {
   user: User | null
+  token: string | null
   isAuthenticated: boolean
-  login: () => void
+  setAuth: (user: User, token: string) => void
   logout: () => void
 }
 
@@ -21,27 +21,25 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
+      token: null,
       isAuthenticated: false,
 
-      login: () =>
+      setAuth: (user, token) =>
         set({
-          user: {
-            id: '1',
-            fullName: 'Anna Kolisnichenko',
-            email: 'anna@example.com',
-            role: 'student',
-          },
+          user,
+          token,
           isAuthenticated: true,
         }),
 
       logout: () =>
         set({
           user: null,
+          token: null,
           isAuthenticated: false,
         }),
     }),
     {
-      name: 'campus-talk-auth',
+      name: 'campustalk-auth',
     },
   ),
 )

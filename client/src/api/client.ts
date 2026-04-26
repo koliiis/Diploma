@@ -1,14 +1,16 @@
 import { API_URL } from '../config/api'
-
-type RequestOptions = RequestInit
+import { useAuthStore } from '../store/authStore'
 
 export async function apiRequest<T>(
   endpoint: string,
-  options?: RequestOptions,
+  options?: RequestInit,
 ): Promise<T> {
+  const token = useAuthStore.getState().token
+
   const response = await fetch(`${API_URL}${endpoint}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options?.headers,
     },
     ...options,

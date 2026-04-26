@@ -1,9 +1,16 @@
-import { Link } from 'react-router-dom'
-import { useAuthStore } from '../../store/auth.store'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../../store/authStore'
+import { Avatar } from '../ui/Avatar'
 
 export function AppHeader() {
-  const user = useAuthStore((state) => state.user)
-  const logout = useAuthStore((state) => state.logout)
+  const user = useAuthStore((s) => s.user)
+  const logout = useAuthStore((s) => s.logout)
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   return (
     <header className="border-b border-gray-200 bg-white">
@@ -27,14 +34,17 @@ export function AppHeader() {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-3 text-sm">
-          <span className="text-gray-600">
-            {user ? user.fullName : 'Guest'}
-          </span>
+        <div className="flex items-center gap-3">
+        {user && (
+          <div className="flex items-center gap-2">
+            <Avatar fullName={user.fullName} avatarUrl={user.avatarUrl} size="sm" />
+            <span className="text-sm text-gray-600">{user.fullName}</span>
+          </div>
+        )}
 
           <button
-            onClick={logout}
-            className="text-gray-500 hover:text-black"
+            onClick={handleLogout}
+            className="rounded-lg border-none bg-gray-200 text-gray-600 px-3 py-1 text-sm hover:bg-gray-300 cursor-pointer"
           >
             Logout
           </button>

@@ -8,6 +8,7 @@ export type Message = {
     _id: string
     fullName: string
     email: string
+    avatarUrl?: string
   }
   chatId: {
     _id: string
@@ -15,11 +16,28 @@ export type Message = {
   }
   localStatus?: 'pending' | 'sent' | 'failed'
 }
-  
-export async function getMessages(chatId?: string): Promise<Message[]> {
-  const endpoint = chatId
-    ? `/api/messages?chatId=${chatId}`
-    : '/api/messages'
+
+export async function getMessages(params?: {
+  chatId?: string
+  before?: string
+  limit?: number
+}): Promise<Message[]> {
+  const searchParams = new URLSearchParams()
+
+  if (params?.chatId) {
+    searchParams.set('chatId', params.chatId)
+  }
+
+  if (params?.before) {
+    searchParams.set('before', params.before)
+  }
+
+  if (params?.limit) {
+    searchParams.set('limit', String(params.limit))
+  }
+
+  const query = searchParams.toString()
+  const endpoint = query ? `/api/messages?${query}` : '/api/messages'
 
   return apiRequest<Message[]>(endpoint)
 }

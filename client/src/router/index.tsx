@@ -1,13 +1,15 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { AppLayout } from '../layouts/AppLayout'
 import { AuthLayout } from '../layouts/AuthLayout'
+import { ChatPage } from '../pages/ChatPage'
 import { ChatsPage } from '../pages/ChatsPage'
 import { CoursesPage } from '../pages/CoursesPage'
 import { DashboardPage } from '../pages/DashboardPage'
 import { LoginPage } from '../pages/LoginPage'
 import { ProfilePage } from '../pages/ProfilePage'
 import { ProtectedRoute } from './ProtectedRoute'
-import { ChatPage } from '../pages/ChatPage'
+import { AuthRedirect } from './AuthRedirect'
+import { RegisterPage } from '../pages/RegisterPage'
 
 export const router = createBrowserRouter([
   {
@@ -16,7 +18,15 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
+        element: <AuthRedirect />,
+      },
+      {
+        path: 'login',
         element: <LoginPage />,
+      },
+      {
+        path: 'register',
+        element: <RegisterPage />,
       },
     ],
   },
