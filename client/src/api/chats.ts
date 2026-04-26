@@ -1,4 +1,4 @@
-import { API_URL } from '../config/api'
+import { apiRequest } from './client'
 
 export type Chat = {
   _id: string
@@ -20,11 +20,5 @@ export type Chat = {
 }
 
 export async function getChats(): Promise<Chat[]> {
-    const response = await fetch(`${API_URL}/api/chats`)
-  
-    if (!response.ok) {
-      throw new Error('Failed to fetch chats')
-    }
-  
-    return response.json()
-  }
+  return apiRequest<Chat[]>('/api/chats')
+}

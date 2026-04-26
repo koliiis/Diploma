@@ -1,4 +1,4 @@
-import { API_URL } from '../config/api'
+import { apiRequest } from './client'
 
 export type UserRole = 'student' | 'teacher'
 
@@ -12,23 +12,11 @@ export type User = {
 }
 
 export async function getUsers(): Promise<User[]> {
-  const response = await fetch(`${API_URL}/api/users`)
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch users')
-  }
-
-  return response.json()
+  return apiRequest<User[]>('/api/users')
 }
 
 export async function createUser(): Promise<User> {
-    const response = await fetch(`${API_URL}/api/users`, {
-      method: 'POST',
-    })
-  
-    if (!response.ok) {
-      throw new Error('Failed to create user')
-    }
-  
-    return response.json()
-  }
+  return apiRequest<User>('/api/users', {
+    method: 'POST',
+  })
+}
