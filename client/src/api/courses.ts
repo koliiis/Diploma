@@ -1,25 +1,19 @@
-import { API_URL } from '../config/api'
+import { apiRequest } from './client'
 
 export type Course = {
+  _id: string
+  title: string
+  description: string
+  teacherId: {
     _id: string
-    title: string
-    description: string
-    teacherId: {
-      _id: string
-      fullName: string
-      email: string
-      role: string
-    }
-    createdAt: string
-    updatedAt: string
+    fullName: string
+    email: string
+    role: string
   }
+  createdAt: string
+  updatedAt: string
+}
   
-  export async function getCourses(): Promise<Course[]> {
-    const response = await fetch(`${API_URL}/api/courses`)
-  
-    if (!response.ok) {
-      throw new Error('Failed to fetch courses')
-    }
-  
-    return response.json()
-  }
+export async function getCourses(): Promise<Course[]> {
+  return apiRequest<Course[]>('/api/courses')
+}
