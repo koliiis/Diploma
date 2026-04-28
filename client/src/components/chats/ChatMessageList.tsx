@@ -28,7 +28,7 @@ export function ChatMessageList({
       className="flex-1 space-y-2 overflow-y-auto px-2 py-4"
       ref={messagesRef}
     >
-      {isLoading && <p>Loading...</p>}
+      {isLoading && <p>Завантаження...</p>}
 
       {hasMoreMessages && !isLoading && (
         <div className="flex justify-center pb-2">
@@ -38,14 +38,14 @@ export function ChatMessageList({
             disabled={isLoadingEarlier}
             className="rounded-full border border-gray-300 px-4 py-1 text-sm text-gray-600 disabled:opacity-50"
           >
-            {isLoadingEarlier ? 'Loading...' : 'Load earlier'}
+            {isLoadingEarlier ? 'Завантаження...' : 'Попередні повідомлення'}
           </button>
         </div>
       )}
 
       {!hasMoreMessages && (
         <div className="flex justify-center pb-2">
-          <p className="text-sm text-gray-600">No more messages</p>
+          <p className="text-sm text-gray-600">Повідомлень більше немає</p>
         </div>
       )}
 

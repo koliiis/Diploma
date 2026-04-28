@@ -36,7 +36,7 @@ export function ChatListItem({
 
           {chat.courseId?.group && (
             <p className="mt-1 text-sm text-gray-500">
-              Group: {chat.courseId.group}
+              Група: {chat.courseId.group}
             </p>
           )}
 

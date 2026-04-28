@@ -10,6 +10,7 @@ export interface IUser extends Document {
   avatarUrl?: string
   createdAt: Date
   updatedAt: Date
+  group?: string
 }
 
 const userSchema = new Schema<IUser>(
@@ -35,6 +36,10 @@ const userSchema = new Schema<IUser>(
     avatarUrl: {
       type: String,
       default: null,
+    },
+    group: {
+      type: String,
+      trim: true,
     },
   },
   {

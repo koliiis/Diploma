@@ -36,6 +36,8 @@ export function CoursesPage() {
   const [editImageUrl, setEditImageUrl] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [showOnlyMine, setShowOnlyMine] = useState(false)
+  const [createCourseError, setCreateCourseError] = useState<string | null>(null)
+  const [showMyGroupOnly, setShowMyGroupOnly] = useState(false)
 
   const user = useAuthStore((s) => s.user)
   const navigate = useNavigate()
@@ -45,34 +47,64 @@ export function CoursesPage() {
     () =>
       courses.filter((course) => {
         const query = searchQuery.toLowerCase().trim()
+  
+        const title = course.title?.toLowerCase() ?? ''
+        const groupValue = course.group?.toLowerCase() ?? ''
+        const userGroup = user?.group?.toLowerCase() ?? ''
+  
         const matchesSearch =
-          course.title.toLowerCase().includes(query) ||
-          course.group.toLowerCase().includes(query)
+          title.includes(query) || groupValue.includes(query)
+  
         const matchesMine = showOnlyMine ? course.isJoined : true
-        return matchesSearch && matchesMine
+  
+        const matchesMyGroup =
+          showMyGroupOnly && userGroup
+            ? groupValue === userGroup
+            : true
+  
+        return matchesSearch && matchesMine && matchesMyGroup
       }),
-    [courses, searchQuery, showOnlyMine],
+    [courses, searchQuery, showOnlyMine, showMyGroupOnly, user?.group],
   )
 
   const handleCreateCourse = async () => {
-    if (!title.trim() || !description.trim() || !group.trim()) return
-
+    const trimmedTitle = title.trim()
+    const trimmedDescription = description.trim()
+    const trimmedGroup = group.trim().toUpperCase()
+    const trimmedImageUrl = imageUrl.trim()
+  
+    const groupRegex = /^[А-ЯІЇЄҐA-Z]{2}-\d{2}$/
+  
+    if (!trimmedTitle || !trimmedDescription || !trimmedGroup) {
+      setCreateCourseError('Заповніть назву, опис і групу курсу')
+      return
+    }
+  
+    if (!groupRegex.test(trimmedGroup)) {
+      setCreateCourseError('Формат групи має бути як ТР-25')
+      return
+    }
+  
     try {
+      setCreateCourseError(null)
       setIsCreating(true)
+  
       await createCourse({
-        title: title.trim(),
-        description: description.trim(),
-        group: group.trim(),
-        imageUrl: imageUrl.trim(),
+        title: trimmedTitle,
+        description: trimmedDescription,
+        group: trimmedGroup,
+        imageUrl: trimmedImageUrl,
       })
+  
       setTitle('')
       setDescription('')
       setGroup('')
       setImageUrl('')
       setIsFormOpen(false)
+  
       await refreshCourses()
     } catch {
-      alert('Не вдалося створити курс')
+      setCreateCourseError('Не вдалося створити курс')
     } finally {
       setIsCreating(false)
     }
@@ -128,7 +160,7 @@ export function CoursesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900">Courses</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Курси</h1>
 
       {isTeacher && (
         <div className="mt-6">
@@ -137,7 +169,7 @@ export function CoursesPage() {
             onClick={() => setIsFormOpen((prev) => !prev)}
             className={buttonPrimaryClass}
           >
-            {isFormOpen ? 'Close form' : 'Create course'}
+            {isFormOpen ? 'Закрити форму' : 'Створити курс'}
           </button>
         </div>
       )}
@@ -150,18 +182,22 @@ export function CoursesPage() {
           imageUrl={imageUrl}
           isCreating={isCreating}
           onChangeTitle={setTitle}
-          onChangeGroup={setGroup}
           onChangeDescription={setDescription}
           onChangeImageUrl={setImageUrl}
           onSubmit={handleCreateCourse}
+          error={createCourseError}
+          onChangeGroup={(value) => setGroup(value.toUpperCase())}
         />
       )}
 
       <CourseListFilters
         searchQuery={searchQuery}
         showOnlyMine={showOnlyMine}
+        showMyGroupOnly={showMyGroupOnly}
+        canFilterByGroup={user?.role === 'student' && Boolean(user?.group)}
         onSearchChange={setSearchQuery}
         onShowOnlyMineChange={setShowOnlyMine}
+        onShowMyGroupOnlyChange={setShowMyGroupOnly}
       />
 
       <div className="mt-6">
@@ -173,7 +209,7 @@ export function CoursesPage() {
 
         {!isLoading && !error && filteredCourses.length === 0 && (
           <p className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-500">
-            Courses not found
+            Курси не знайдено
           </p>
         )}
 

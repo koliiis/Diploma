@@ -7,6 +7,7 @@ type User = {
   email: string
   role: 'student' | 'teacher'
   avatarUrl?: string
+  group?: string
 }
 
 type AuthState = {
