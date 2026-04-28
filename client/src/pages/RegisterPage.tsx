@@ -3,65 +3,172 @@ import { Link, useNavigate } from 'react-router-dom'
 import { login, register } from '../api/auth'
 import { useAuthStore } from '../store/authStore'
 
+type RegisterErrors = {
+  fullName?: string
+  group?: string
+  email?: string
+  password?: string
+  general?: string
+}
+
 export function RegisterPage() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<'student' | 'teacher'>('student')
+  const [group, setGroup] = useState('')
+  const [errors, setErrors] = useState<RegisterErrors>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const setAuth = useAuthStore((s) => s.setAuth)
 
   const navigate = useNavigate()
 
+  const validateForm = () => {
+    const nextErrors: RegisterErrors = {}
+  
+    const trimmedFullName = fullName.trim()
+    const trimmedEmail = email.trim()
+    const trimmedGroup = group.trim()
+  
+    const ukrainianFullNameRegex =
+      /^[А-ЯІЇЄҐ][а-яіїєґ']+\s+[А-ЯІЇЄҐ][а-яіїєґ']+$/
+  
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  
+    const groupRegex = /^[А-ЯІЇЄҐ]{2}-\d{2}$/
+  
+    if (!trimmedFullName) {
+      nextErrors.fullName = 'Вкажіть імʼя та прізвище'
+    } else if (!ukrainianFullNameRegex.test(trimmedFullName)) {
+      nextErrors.fullName =
+        'Імʼя та прізвище мають бути українською, наприклад: Анна Коваленко'
+    }
+  
+    if (role === 'student') {
+      if (!trimmedGroup) {
+        nextErrors.group = 'Вкажіть групу'
+      } else if (!groupRegex.test(trimmedGroup)) {
+        nextErrors.group = 'Формат групи має бути як ТР-25'
+      }
+    }
+  
+    if (!trimmedEmail) {
+      nextErrors.email = 'Вкажіть електронну адресу'
+    } else if (!emailRegex.test(trimmedEmail)) {
+      nextErrors.email = 'Введіть коректну електронну адресу'
+    }
+  
+    if (!password) {
+      nextErrors.password = 'Вкажіть пароль'
+    } else if (password.length < 8 || !/\d/.test(password)) {
+      nextErrors.password =
+        'Пароль має містити щонайменше 8 символів і хоча б одну цифру'
+    }
+  
+    return nextErrors
+  }
+
   const handleRegister = async () => {
+    const validationErrors = validateForm()
+  
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors)
+      return
+    }
+  
+    const trimmedFullName = fullName.trim()
+    const trimmedEmail = email.trim()
+    const trimmedGroup = group.trim()
+  
     try {
+      setErrors({})
+      setIsSubmitting(true)
+  
       await register({
-        fullName,
-        email,
+        fullName: trimmedFullName,
+        email: trimmedEmail,
         password,
         role,
+        group: role === 'student' ? trimmedGroup : undefined,
       })
   
       const loginData = await login({
-        email,
+        email: trimmedEmail,
         password,
       })
-      
-      localStorage.setItem('campustalk_last_email', email)
+  
+      localStorage.setItem('campustalk_last_email', trimmedEmail)
   
       setAuth(loginData.user, loginData.token)
-  
       navigate('/dashboard')
     } catch {
-      alert('Register failed')
+      setErrors({
+        general: 'Не вдалося зареєструватися',
+      })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
     <div className="max-w-md mx-auto mt-20 space-y-4">
-      <h1 className="text-2xl font-bold">Register</h1>
+      <h1 className="text-2xl font-bold">Реєстрація</h1>
 
-      <input
-        value={fullName}
-        onChange={(e) => setFullName(e.target.value)}
-        placeholder="Full name"
-        className="w-full border p-2"
-      />
+      <div>
+        <input
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          placeholder="Імʼя та прізвище"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2"
+        />
 
-      <input
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Email"
-        className="w-full border p-2"
-      />
+        {errors.fullName && (
+          <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>
+        )}
+      </div>
 
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
-        className="w-full border p-2"
-      />
+      {role === 'student' && (
+        <div>
+          <input
+            value={group}
+            onChange={(e) => setGroup(e.target.value.toUpperCase())}
+            placeholder="Група, наприклад ТР-25"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2"
+          />
+
+          {errors.group && (
+            <p className="mt-1 text-sm text-red-600">{errors.group}</p>
+          )}
+        </div>
+      )}
+
+      <div>
+        <input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Електронна адреса"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2"
+        />
+
+        {errors.email && (
+          <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+        )}
+      </div>
+
+      <div>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Пароль"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2"
+        />
+
+        {errors.password && (
+          <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+        )}
+      </div>
 
       <select
         value={role}
@@ -70,8 +177,8 @@ export function RegisterPage() {
         }
         className="w-full border p-2"
       >
-        <option value="student">Student</option>
-        <option value="teacher">Teacher</option>
+        <option value="student">Студент</option>
+        <option value="teacher">Викладач</option>
       </select>
 
       <p className="text-sm text-gray-600">
@@ -83,12 +190,20 @@ export function RegisterPage() {
           Увійти
         </Link>
       </p>
+      
+      {errors.general && (
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+          {errors.general}
+        </p>
+      )}
 
       <button
+        type="button"
         onClick={handleRegister}
-        className="w-full bg-black text-white p-2"
+        disabled={isSubmitting}
+        className="w-full rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
       >
-        Register
+        {isSubmitting ? 'Реєстрація...' : 'Зареєструватися'}
       </button>
     </div>
   )

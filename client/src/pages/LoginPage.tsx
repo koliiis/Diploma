@@ -8,32 +8,48 @@ export function LoginPage() {
     localStorage.getItem('campustalk_last_email') ?? '',
   )
   const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const setAuth = useAuthStore((s) => s.setAuth)
   const navigate = useNavigate()
 
   const handleLogin = async () => {
+    const trimmedEmail = email.trim()
+  
+    if (!trimmedEmail || !password.trim()) {
+      setError('Заповніть електронну адресу й пароль')
+      return
+    }
+  
     try {
-      const data = await login({ email, password })
-
-      localStorage.setItem('campustalk_last_email', email)
-
+      setError(null)
+      setIsSubmitting(true)
+  
+      const data = await login({
+        email: trimmedEmail,
+        password,
+      })
+  
+      localStorage.setItem('campustalk_last_email', trimmedEmail)
+  
       setAuth(data.user, data.token)
-
       navigate('/dashboard')
     } catch {
-      alert('Login failed')
+      setError('Невірна електронна адреса або пароль')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
     <div className="max-w-md mx-auto mt-20 space-y-4">
-      <h1 className="text-2xl font-bold">Login</h1>
+      <h1 className="text-2xl font-bold">Вхід</h1>
 
       <input
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="Email"
+        placeholder="Електронна адреса"
         className="w-full border p-2"
       />
 
@@ -41,7 +57,7 @@ export function LoginPage() {
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
+        placeholder="Пароль"
         className="w-full border p-2"
       />
 
@@ -55,11 +71,19 @@ export function LoginPage() {
         </Link>
       </p>
 
+      {error && (
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+          {error}
+        </p>
+      )}
+
       <button
+        type="button"
         onClick={handleLogin}
-        className="w-full bg-black text-white p-2"
+        disabled={isSubmitting}
+        className="w-full rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
       >
-        Login
+        {isSubmitting ? 'Вхід...' : 'Увійти'}
       </button>
     </div>
   )

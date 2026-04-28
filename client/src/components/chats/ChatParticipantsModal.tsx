@@ -1,5 +1,6 @@
 import type { Chat } from '../../api/chats'
 import { Avatar } from '../ui/Avatar'
+import { roleLabelUk } from '../../utils/roleLabels'
 
 type ChatParticipantsModalProps = {
   chat: Chat
@@ -34,7 +35,7 @@ export function ChatParticipantsModal({
             onClick={onClose}
             className="text-sm text-gray-500 hover:text-black"
           >
-            Close
+            Закрити
           </button>
         </div>
 
@@ -55,7 +56,9 @@ export function ChatParticipantsModal({
                   {participant.fullName}
                 </p>
                 <p className="text-xs text-gray-500">{participant.email}</p>
-                <p className="text-xs text-gray-400">{participant.role}</p>
+                <p className="text-xs text-gray-400">
+                  {roleLabelUk(participant.role)}
+                </p>
               </div>
             </div>
           ))}

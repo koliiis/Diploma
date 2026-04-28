@@ -21,16 +21,16 @@ export function AppHeader() {
 
         <nav className="flex items-center gap-4 text-sm">
           <Link to="/dashboard" className="text-gray-600 hover:text-black">
-            Dashboard
+            Головна сторінка
           </Link>
           <Link to="/dashboard/courses" className="text-gray-600 hover:text-black">
-            Courses
+            Курси
           </Link>
           <Link to="/dashboard/chats" className="text-gray-600 hover:text-black">
-            Chats
+            Чати
           </Link>
           <Link to="/dashboard/profile" className="text-gray-600 hover:text-black">
-            Profile
+            Профіль
           </Link>
         </nav>
 
@@ -46,7 +46,7 @@ export function AppHeader() {
             onClick={handleLogout}
             className="rounded-lg border-none bg-gray-200 text-gray-600 px-3 py-1 text-sm hover:bg-gray-300 cursor-pointer"
           >
-            Logout
+            Вийти
           </button>
         </div>
       </div>

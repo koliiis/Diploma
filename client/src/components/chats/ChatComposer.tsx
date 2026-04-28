@@ -52,7 +52,7 @@ export function ChatComposer({
         disabled={isSending || !value.trim()}
         className="rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
       >
-        {isSending ? '...' : 'Send'}
+        {isSending ? 'Відправлення...' : 'Надіслати'}
       </button>
     </div>
   )

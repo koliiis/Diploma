@@ -41,7 +41,7 @@ export function useChatMessages(chatId?: string) {
       saveMessages(chatId, merged)
     } catch {
       if (cached.length === 0) {
-        console.log('Offline mode: no cached messages')
+        console.log('Офлайн: немає кешованих повідомлень')
       }
     } finally {
       setIsLoading(false)
@@ -103,12 +103,12 @@ export function useChatMessages(chatId?: string) {
       createdAt: new Date().toISOString(),
       authorId: {
         _id: currentUser?._id ?? 'local-user',
-        fullName: currentUser?.fullName ?? 'You',
+        fullName: currentUser?.fullName ?? 'Ви',
         email: currentUser?.email ?? 'local@example.com',
       },
       chatId: {
         _id: chatId,
-        title: 'Current chat',
+        title: 'Поточний чат',
       },
       localStatus: 'pending',
     }

@@ -77,7 +77,7 @@ export function CourseCard({
             value={editImageUrl}
             onChange={(e) => onEditImageUrlChange(e.target.value)}
             className={fieldClass}
-            placeholder="Image URL"
+            placeholder="Посилання на зображення"
           />
 
           <div className="flex gap-2">
@@ -86,7 +86,7 @@ export function CourseCard({
               onClick={onSaveEdit}
               className="rounded-lg bg-black px-4 py-2 text-white"
             >
-              Save
+              Зберегти
             </button>
 
             <button
@@ -94,7 +94,7 @@ export function CourseCard({
               onClick={onCancelEdit}
               className="rounded-lg border border-gray-300 px-4 py-2"
             >
-              Cancel
+              Скасувати
             </button>
           </div>
         </div>
@@ -120,7 +120,7 @@ export function CourseCard({
               </h3>
 
               <p className="mt-1 text-sm font-medium text-gray-500">
-                Group: {course.group}
+                Група: {course.group}
               </p>
             </div>
           </div>
@@ -133,7 +133,7 @@ export function CourseCard({
 
           <div className="mt-3 text-sm text-gray-500">
             <p>Викладач: {course.teacherId.fullName}</p>
-            <p>Email: {course.teacherId.email}</p>
+            <p>Електронна адреса: {course.teacherId.email}</p>
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -144,7 +144,7 @@ export function CourseCard({
                   onClick={() => onStartEdit(course)}
                   className={buttonSecondaryClass}
                 >
-                  Edit
+                  Редагувати
                 </button>
 
                 <button
@@ -152,7 +152,7 @@ export function CourseCard({
                   onClick={() => onDelete(course._id)}
                   className={buttonDangerClass}
                 >
-                  Delete
+                  Видалити
                 </button>
 
                 {course.chatId && (
@@ -172,7 +172,7 @@ export function CourseCard({
                 {course.isJoined ? (
                   <>
                     <span className="rounded-lg bg-gray-200 px-3 py-1.5 text-sm text-gray-600">
-                      Joined
+                      Ви приєдналися
                     </span>
 
                     {course.chatId && (
@@ -191,7 +191,7 @@ export function CourseCard({
                     onClick={() => onJoin(course._id)}
                     className={buttonPrimarySmallClass}
                   >
-                    Join chat
+                    До чату курсу
                   </button>
                 )}
 

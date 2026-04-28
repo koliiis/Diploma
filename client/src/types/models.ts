@@ -8,6 +8,7 @@ export type User = {
   avatarUrl?: string
   createdAt: string
   updatedAt: string
+  group?: string
 }
 
 export type Course = {

@@ -7,11 +7,17 @@ export const authRouter = Router()
 
 authRouter.post('/register', async (req, res) => {
   try {
-    const { fullName, email, password, role } = req.body
+    const { fullName, email, password, role, group } = req.body
 
     if (!fullName || !email || !password || !role) {
       return res.status(400).json({
         error: 'All fields are required',
+      })
+    }
+    
+    if (role === 'student' && !group) {
+      return res.status(400).json({
+        error: 'Group is required for students',
       })
     }
 
@@ -30,6 +36,7 @@ authRouter.post('/register', async (req, res) => {
       email,
       password: hashedPassword,
       role,
+      group: role === 'student' ? group : undefined,
     })
 
     res.json({
@@ -37,6 +44,7 @@ authRouter.post('/register', async (req, res) => {
       fullName: user.fullName,
       email: user.email,
       role: user.role,
+      group: user.group || undefined,
     })
   } catch (error) {
     console.error(error)
@@ -97,6 +105,7 @@ authRouter.post('/login', async (req, res) => {
         email: user.email,
         role: user.role,
         avatarUrl: user.avatarUrl || undefined,
+        group: user.group || undefined,
       },
     })
   } catch (error) {

@@ -9,6 +9,7 @@ type CourseCreateFormProps = {
   description: string
   imageUrl: string
   isCreating: boolean
+  error: string | null
   onChangeTitle: (v: string) => void
   onChangeGroup: (v: string) => void
   onChangeDescription: (v: string) => void
@@ -22,6 +23,7 @@ export function CourseCreateForm({
   description,
   imageUrl,
   isCreating,
+  error,
   onChangeTitle,
   onChangeGroup,
   onChangeDescription,
@@ -30,34 +32,40 @@ export function CourseCreateForm({
 }: CourseCreateFormProps) {
   return (
     <div className="mt-6 rounded-xl border border-gray-200 bg-white p-4">
-      <h2 className="text-lg font-semibold text-gray-900">Create course</h2>
+      <h2 className="text-lg font-semibold text-gray-900">Новий курс</h2>
 
       <div className="mt-4 grid gap-3">
         <input
           value={title}
           onChange={(e) => onChangeTitle(e.target.value)}
-          placeholder="Course title"
+          placeholder="Назва курсу"
           className={fieldClass}
         />
 
         <input
           value={group}
           onChange={(e) => onChangeGroup(e.target.value)}
-          placeholder="Group, e.g. CS-21"
+          placeholder="Група, наприклад ТР-25"
           className={fieldClass}
         />
+
+        {error && (
+          <p className="text-sm text-red-600">
+            {error}
+          </p>
+        )}
 
         <textarea
           value={description}
           onChange={(e) => onChangeDescription(e.target.value)}
-          placeholder="Course description"
+          placeholder="Опис курсу"
           className={fieldClass}
         />
 
         <input
           value={imageUrl}
           onChange={(e) => onChangeImageUrl(e.target.value)}
-          placeholder="Image URL optional"
+          placeholder="Посилання на зображення (необов’язково)"
           className={fieldClass}
         />
 
@@ -67,7 +75,7 @@ export function CourseCreateForm({
           disabled={isCreating}
           className={`${buttonPrimaryClass} disabled:opacity-50`}
         >
-          {isCreating ? 'Creating...' : 'Create course'}
+          {isCreating ? 'Створення...' : 'Створити курс'}
         </button>
       </div>
     </div>

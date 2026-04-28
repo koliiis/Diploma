@@ -58,7 +58,7 @@ function ChatPageView({ chatId }: { chatId: string | undefined }) {
           to="/dashboard/chats"
           className="text-sm text-gray-600 no-underline hover:text-black"
         >
-          ← Back to chats
+          ← Назад до чатів
         </Link>
       </div>
 
