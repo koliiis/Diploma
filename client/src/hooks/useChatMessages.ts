@@ -4,22 +4,9 @@ import {
   saveMessages,
   loadMessages as loadCachedMessages,
 } from '../utils/messagesStorage'
+import { mergeMessagesByIdChronological } from '../utils/mergeMessages'
 import { useAuthStore } from '../store/authStore'
-
-function mergeMessagesByIdChronological(
-  a: Message[],
-  b: Message[],
-): Message[] {
-  return [...a, ...b]
-    .filter(
-      (msg, index, self) =>
-        index === self.findIndex((m) => m._id === msg._id),
-    )
-    .sort(
-      (x, y) =>
-        new Date(x.createdAt).getTime() - new Date(y.createdAt).getTime(),
-    )
-}
+import { socket } from '../socket'
 
 export function useChatMessages(chatId?: string) {
   const [messages, setMessages] = useState<Message[]>([])
@@ -80,6 +67,8 @@ export function useChatMessages(chatId?: string) {
           content: pendingMessage.content,
         })
 
+        socket.emit('send-message', savedMessage)
+
         currentMessages = currentMessages.map((m) =>
           m._id === pendingMessage._id
             ? { ...savedMessage, localStatus: 'sent' as const }
@@ -136,6 +125,8 @@ export function useChatMessages(chatId?: string) {
         chatId,
         content: trimmedText,
       })
+
+      socket.emit('send-message', savedMessage)
 
       const updatedMessages = nextMessages.map((message) =>
         message._id === tempId
@@ -203,6 +194,33 @@ export function useChatMessages(chatId?: string) {
     }
     queueMicrotask(run)
   }, [chatId, loadMessages])
+
+  useEffect(() => {
+    if (!chatId) return
+  
+    function handleNewMessage(message: Message) {
+      if (message.chatId._id !== chatId) return
+  
+      setMessages((prev) => {
+        const alreadyExists = prev.some((m) => m._id === message._id)
+  
+        if (alreadyExists) {
+          return prev
+        }
+  
+        const nextMessages = [...prev, message]
+        saveMessages(chatId, nextMessages)
+  
+        return nextMessages
+      })
+    }
+  
+    socket.on('new-message', handleNewMessage)
+  
+    return () => {
+      socket.off('new-message', handleNewMessage)
+    }
+  }, [chatId])
 
   useEffect(() => {
     const handleOnline = () => {

@@ -1,24 +1,42 @@
 import { Router } from 'express'
 import { CourseModel } from '../models/course.model'
-import { UserModel } from '../models/user.model'
+import { ChatModel } from '../models/chat.model'
+import { authMiddleware, type AuthRequest } from '../middleware/auth.middleware'
 
 export const coursesRouter = Router()
 
-coursesRouter.post('/', async (_req, res) => {
+coursesRouter.post('/', authMiddleware, async (req: AuthRequest, res) => {
   try {
-    const teacher = await UserModel.findOne({ role: 'teacher' })
+    const { title, description, group, imageUrl } = req.body
 
-    if (!teacher) {
+    if (!title || !description || !group) {
       return res.status(400).json({
-        error: 'Create a teacher user first',
+        error: 'title, description and group are required',
+      })
+    }
+
+    const user = req.user
+
+    if (!user || user.role !== 'teacher') {
+      return res.status(403).json({
+        error: 'Only teachers can create courses',
       })
     }
 
     const course = await CourseModel.create({
-      title: `Web Development ${Date.now()}`,
-      description: 'Course about modern web development',
-      teacherId: teacher._id,
+      title,
+      description,
+      group,
+      imageUrl,
+      teacherId: user.userId,
       studentIds: [],
+    })
+    
+    await ChatModel.create({
+      title,
+      type: 'course',
+      courseId: course._id,
+      participantIds: [user.userId],
     })
 
     res.json(course)
@@ -28,15 +46,148 @@ coursesRouter.post('/', async (_req, res) => {
   }
 })
 
-coursesRouter.get('/', async (_req, res) => {
+coursesRouter.post('/:courseId/join', authMiddleware, async (req: AuthRequest, res) => {
   try {
-    const courses = await CourseModel.find()
-      .populate('teacherId', 'fullName email role')
-      .sort({ createdAt: -1 })
+    const { courseId } = req.params
+    const user = req.user
 
-    res.json(courses)
+    if (!user) {
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
+
+    const course = await CourseModel.findById(courseId)
+
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' })
+    }
+
+    const alreadyJoined = course.studentIds.some(
+      (studentId) => studentId.toString() === user.userId,
+    )
+    
+    if (!alreadyJoined && user.role === 'student') {
+      course.studentIds.push(user.userId as any)
+      await course.save()
+    }
+
+    const chat = await ChatModel.findOne({
+      courseId: course._id,
+      type: 'course',
+    })
+    
+    if (chat) {
+      const alreadyInChat = chat.participantIds.some(
+        (participantId) => participantId.toString() === user.userId,
+      )
+    
+      if (!alreadyInChat) {
+        chat.participantIds.push(user.userId as any)
+        await chat.save()
+      }
+    }
+
+    res.json(course)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Failed to join course' })
+  }
+})
+
+coursesRouter.get('/', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const user = req.user
+
+    const courses = await CourseModel.find()
+      .populate('teacherId', 'fullName email')
+
+      const result = await Promise.all(
+        courses.map(async (course) => {
+          const chat = await ChatModel.findOne({
+            courseId: course._id,
+            type: 'course',
+          })
+      
+          const isJoined =
+            course.teacherId._id.toString() === user?.userId ||
+            course.studentIds.some((id) => id.toString() === user?.userId)
+      
+          const membersCount = course.studentIds.length + 1
+      
+          return {
+            ...course.toObject(),
+            isJoined,
+            membersCount,
+            chatId: chat?._id,
+          }
+        }),
+      )
+
+    res.json(result)
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Failed to fetch courses' })
+  }
+})
+
+coursesRouter.patch('/:courseId', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const { courseId } = req.params
+    const { title, description, group, imageUrl } = req.body
+
+    const user = req.user
+
+    if (!user || user.role !== 'teacher') {
+      return res.status(403).json({ error: 'Only teachers can edit courses' })
+    }
+
+    const course = await CourseModel.findById(courseId)
+
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' })
+    }
+
+    if (course.teacherId.toString() !== user.userId) {
+      return res.status(403).json({ error: 'You can edit only your own courses' })
+    }
+
+    course.title = title ?? course.title
+    course.description = description ?? course.description
+    course.group = group ?? course.group
+    course.imageUrl = imageUrl ?? course.imageUrl
+
+    await course.save()
+
+    res.json(course)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Failed to update course' })
+  }
+})
+
+coursesRouter.delete('/:courseId', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const { courseId } = req.params
+    const user = req.user
+
+    if (!user || user.role !== 'teacher') {
+      return res.status(403).json({ error: 'Only teachers can delete courses' })
+    }
+
+    const course = await CourseModel.findById(courseId)
+
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' })
+    }
+
+    if (course.teacherId.toString() !== user.userId) {
+      return res.status(403).json({ error: 'You can delete only your own courses' })
+    }
+
+    await course.deleteOne()
+
+    res.json({ ok: true })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Failed to delete course' })
   }
 })

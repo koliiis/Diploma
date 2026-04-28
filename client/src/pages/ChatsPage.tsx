@@ -1,70 +1,52 @@
-import { useEffect, useState } from 'react'
-import { getChats, type Chat } from '../api/chats'
-import { Link } from 'react-router-dom'
-import { saveChats, loadChats } from '../utils/chatsStorage'
+import { useState } from 'react'
+import type { Chat } from '../api/chats'
+import { useChatsList } from '../hooks/useChatsList'
+import { useAuthStore } from '../store/authStore'
+import { ChatListItem } from '../components/chats/ChatListItem'
+import { ChatParticipantsModal } from '../components/chats/ChatParticipantsModal'
 
 export function ChatsPage() {
-  const [chats, setChats] = useState<Chat[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    async function loadChatsData() {
-      const cached = loadChats()
-  
-      if (cached.length > 0) {
-        setChats(cached)
-        setIsLoading(false)
-      }
-  
-      try {
-        const data = await getChats()
-        setChats(data)
-        saveChats(data)
-        setError(null)
-      } catch {
-        if (cached.length === 0) {
-          setError('Не вдалося завантажити чати')
-        }
-      } finally {
-        setIsLoading(false)
-      }
-    }
-  
-    loadChatsData()
-  }, [])
+  const { data: chats, isLoading, error } = useChatsList()
+  const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
+  const currentUser = useAuthStore((s) => s.user)
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900">Chats</h1>
 
       <div className="mt-6">
-        {isLoading && <p className="text-sm text-gray-500">Завантаження...</p>}
+        {isLoading && (
+          <p className="text-sm text-gray-500">Завантаження...</p>
+        )}
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
-        {!isLoading && !error && (
+        {!isLoading && !error && chats.length === 0 && (
+          <p className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-500">
+            У вас поки немає чатів. Знайдіть курс і приєднайтесь до чату.
+          </p>
+        )}
+
+        {!isLoading && !error && chats.length > 0 && (
           <div className="space-y-4">
             {chats.map((chat) => (
-              <Link
+              <ChatListItem
                 key={chat._id}
-                to={`/dashboard/chats/${chat._id}`}
-                className="block rounded-xl border border-gray-200 bg-white p-4 no-underline hover:bg-gray-50"
-              >
-                <h3 className="text-lg font-medium text-gray-900">
-                  {chat.title}
-                </h3>
-
-                {chat.courseId && (
-                  <p className="text-sm text-gray-600">
-                    {chat.courseId.title}
-                  </p>
-                )}
-              </Link>
+                chat={chat}
+                currentUserId={currentUser?._id}
+                onOpenParticipants={setSelectedChat}
+              />
             ))}
           </div>
         )}
       </div>
+
+      {selectedChat && (
+        <ChatParticipantsModal
+          chat={selectedChat}
+          onClose={() => setSelectedChat(null)}
+        />
+      )}
     </div>
   )
 }
