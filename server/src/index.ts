@@ -1,17 +1,28 @@
 import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
+import { createServer } from 'http'
+import { Server } from 'socket.io'
 import { connectToDatabase } from './config/db'
 import { usersRouter } from './routes/users.routes'
 import { coursesRouter } from './routes/courses.routes'
 import { chatsRouter } from './routes/chats.routes'
 import { messagesRouter } from './routes/messages.routes'
 import { authRouter } from './routes/auth.routes'
+import { setupSocket } from './socket/setupSocket'
 
 dotenv.config()
 
 const app = express()
 const PORT = Number(process.env.PORT) || 4000
+
+const server = createServer(app)
+
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  },
+})
 
 app.use(cors())
 app.use(express.json())
@@ -29,11 +40,13 @@ app.get('/api/health', (_req, res) => {
   })
 })
 
+setupSocket(io)
+
 async function startServer() {
   try {
     await connectToDatabase()
 
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`Server is running on http://127.0.0.1:${PORT}`)
     })
   } catch (error) {
