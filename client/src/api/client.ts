@@ -16,6 +16,12 @@ export async function apiRequest<T>(
     ...options,
   })
 
+  if (response.status === 401) {
+    useAuthStore.getState().logout()
+    window.location.href = '/login'
+    throw new Error('Unauthorized')
+  }
+
   if (!response.ok) {
     throw new Error(`API request failed: ${endpoint}`)
   }
