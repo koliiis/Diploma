@@ -6,7 +6,7 @@ type JwtPayload = {
   exp?: number
 }
 
-type User = {
+export type AuthUser = {
   _id: string
   fullName: string
   email: string
@@ -16,17 +16,31 @@ type User = {
 }
 
 type AuthState = {
-  user: User | null
+  user: AuthUser | null
   token: string | null
   isAuthenticated: boolean
-  setAuth: (user: User, token: string) => void
+  setAuth: (user: AuthUser, token: string) => void
   isSessionExpired: () => boolean
   logout: () => void
 }
 
+function isTokenExpired(token: string | null): boolean {
+  if (!token) return true
+
+  try {
+    const decoded = jwtDecode<JwtPayload>(token)
+
+    if (!decoded.exp) return true
+
+    return decoded.exp * 1000 < Date.now()
+  } catch {
+    return true
+  }
+}
+
 export const useAuthStore = create<AuthState>()(
   persist<AuthState>(
-    (set) => ({
+    (set, get) => ({
       user: null,
       token: null,
       isAuthenticated: false,
@@ -38,20 +52,8 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: true,
         }),
 
-      isSessionExpired: () => {
-        const token = useAuthStore.getState().token
-      
-        if (!token) return true
-      
-        try {
-          const decoded = jwtDecode<JwtPayload>(token)
-      
-          if (!decoded.exp) return true
-      
-          return decoded.exp * 1000 < Date.now()
-        } catch {
-          return true
-        }
+      isSessionExpired: (): boolean => {
+        return isTokenExpired(get().token)
       },
 
       logout: () =>
