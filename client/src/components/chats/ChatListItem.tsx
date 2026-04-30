@@ -28,11 +28,11 @@ export function ChatListItem({
         <div className="min-w-0 flex-1">
           <p className="text-lg font-medium text-gray-900">{title}</p>
 
-          {chat.courseId && (
-            <p className="mt-1 text-sm text-gray-600">
-              {chat.courseId.description}
-            </p>
-          )}
+          {chat.unreadCount ? (
+            <span className="ml-2 rounded-full bg-black px-2 py-0.5 text-xs text-white">
+              {chat.unreadCount}
+            </span>
+          ) : null}
 
           {chat.courseId?.group && (
             <p className="mt-1 text-sm text-gray-500">
@@ -62,6 +62,19 @@ export function ChatListItem({
                 Учасників: {chat.participantIds.length}
               </span>
             </div>
+          )}
+
+          {chat.lastMessage ? (
+            <p className="mt-1 line-clamp-1 text-sm text-gray-500">
+              {chat.lastMessage.authorId._id === currentUserId
+                ? 'Ви'
+                : chat.lastMessage.authorId.fullName}
+              : {chat.lastMessage.content}
+            </p>
+          ) : (
+            <p className="mt-1 text-sm text-gray-400">
+              Повідомлень ще немає
+            </p>
           )}
         </div>
       </div>

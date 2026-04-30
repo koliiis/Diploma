@@ -5,7 +5,7 @@ import {
 
 type CourseCreateFormProps = {
   title: string
-  group: string
+  groupsInput: string
   description: string
   imageUrl: string
   isCreating: boolean
@@ -19,7 +19,7 @@ type CourseCreateFormProps = {
 
 export function CourseCreateForm({
   title,
-  group,
+  groupsInput,
   description,
   imageUrl,
   isCreating,
@@ -43,9 +43,9 @@ export function CourseCreateForm({
         />
 
         <input
-          value={group}
+          value={groupsInput}
           onChange={(e) => onChangeGroup(e.target.value)}
-          placeholder="Група, наприклад ТР-25"
+          placeholder="Групи, наприклад ТР-25, КН-21"
           className={fieldClass}
         />
 

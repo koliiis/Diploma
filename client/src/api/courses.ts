@@ -12,11 +12,18 @@ export type Course = {
   }
   createdAt: string
   updatedAt: string
-  group: string
+  groups: string[]
   imageUrl?: string
   isJoined?: boolean
   membersCount?: number
   chatId?: string
+  participants?: {
+    _id: string
+    fullName: string
+    email: string
+    role: string
+    avatarUrl?: string
+  }[]
 }
   
 export async function getCourses(): Promise<Course[]> {
@@ -26,7 +33,7 @@ export async function getCourses(): Promise<Course[]> {
 export async function createCourse(params: {
   title: string
   description: string
-  group: string
+  groups: string[]
   imageUrl?: string
 }): Promise<Course> {
   return apiRequest<Course>('/api/courses', {
@@ -40,7 +47,7 @@ export async function updateCourse(
   params: {
     title: string
     description: string
-    group: string
+    groups: string[]
     imageUrl?: string
   },
 ): Promise<Course> {

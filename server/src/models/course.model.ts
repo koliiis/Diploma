@@ -7,7 +7,7 @@ export interface ICourse extends Document {
   studentIds: Types.ObjectId[]
   createdAt: Date
   updatedAt: Date
-  group: string
+  groups: string[]
   imageUrl?: string
 }
 
@@ -33,11 +33,13 @@ const courseSchema = new Schema<ICourse>(
         ref: 'User',
       },
     ],
-    group: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    groups: [
+      {
+        type: String,
+        required: true,
+        trim: true,
+      },
+    ],
     imageUrl: {
       type: String,
       default: '',

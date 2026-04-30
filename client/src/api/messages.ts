@@ -51,3 +51,29 @@ export async function createMessage(params: {
     body: JSON.stringify(params),
   })
 }
+
+export async function markMessagesAsRead(
+  chatId: string,
+): Promise<{ ok: boolean }> {
+  return apiRequest<{ ok: boolean }>(`/api/messages/read/${chatId}`, {
+    method: 'PATCH',
+  })
+}
+
+export async function updateMessage(
+  messageId: string,
+  content: string,
+): Promise<Message> {
+  return apiRequest<Message>(`/api/messages/${messageId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ content }),
+  })
+}
+
+export async function deleteMessage(
+  messageId: string,
+): Promise<{ ok: boolean }> {
+  return apiRequest<{ ok: boolean }>(`/api/messages/${messageId}`, {
+    method: 'DELETE',
+  })
+}

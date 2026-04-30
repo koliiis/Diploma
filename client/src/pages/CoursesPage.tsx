@@ -14,6 +14,7 @@ import { CourseCreateForm } from '../components/courses/CourseCreateForm'
 import { CourseListFilters } from '../components/courses/CourseListFilters'
 import { CourseCard } from '../components/courses/CourseCard'
 import { buttonPrimaryClass } from '../components/courses/courseFormClasses'
+import { CourseParticipantsModal } from '../components/courses/CourseParticipantsModal'
 
 export function CoursesPage() {
   const {
@@ -25,7 +26,7 @@ export function CoursesPage() {
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [group, setGroup] = useState('')
+  const [groupsInput, setGroupsInput] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [isCreating, setIsCreating] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -38,6 +39,7 @@ export function CoursesPage() {
   const [showOnlyMine, setShowOnlyMine] = useState(false)
   const [createCourseError, setCreateCourseError] = useState<string | null>(null)
   const [showMyGroupOnly, setShowMyGroupOnly] = useState(false)
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
 
   const user = useAuthStore((s) => s.user)
   const navigate = useNavigate()
@@ -49,18 +51,22 @@ export function CoursesPage() {
         const query = searchQuery.toLowerCase().trim()
   
         const title = course.title?.toLowerCase() ?? ''
-        const groupValue = course.group?.toLowerCase() ?? ''
-        const userGroup = user?.group?.toLowerCase() ?? ''
-  
-        const matchesSearch =
-          title.includes(query) || groupValue.includes(query)
   
         const matchesMine = showOnlyMine ? course.isJoined : true
   
+        const courseGroups = course.groups ?? []
+        const userGroup = user?.group?.toLowerCase() ?? ''
+
+        const groupValue = courseGroups.join(', ').toLowerCase()
+
         const matchesMyGroup =
           showMyGroupOnly && userGroup
-            ? groupValue === userGroup
+            ? courseGroups.some((group) => group.toLowerCase() === userGroup)
             : true
+
+        
+        const matchesSearch =
+          title.includes(query) || groupValue.includes(query)
   
         return matchesSearch && matchesMine && matchesMyGroup
       }),
@@ -70,18 +76,21 @@ export function CoursesPage() {
   const handleCreateCourse = async () => {
     const trimmedTitle = title.trim()
     const trimmedDescription = description.trim()
-    const trimmedGroup = group.trim().toUpperCase()
+    const trimmedGroups = groupsInput
+      .split(',')
+      .map((group) => group.trim().toUpperCase())
+      .filter(Boolean)
     const trimmedImageUrl = imageUrl.trim()
   
     const groupRegex = /^[А-ЯІЇЄҐA-Z]{2}-\d{2}$/
   
-    if (!trimmedTitle || !trimmedDescription || !trimmedGroup) {
+    if (!trimmedTitle || !trimmedDescription || !trimmedGroups.length) {
       setCreateCourseError('Заповніть назву, опис і групу курсу')
       return
     }
   
-    if (!groupRegex.test(trimmedGroup)) {
-      setCreateCourseError('Формат групи має бути як ТР-25')
+    if (!trimmedGroups.every((group) => groupRegex.test(group))) {
+      setCreateCourseError('Формат групи має бути як ТР-25 або ж ТР-21, ТР-22')
       return
     }
   
@@ -92,13 +101,13 @@ export function CoursesPage() {
       await createCourse({
         title: trimmedTitle,
         description: trimmedDescription,
-        group: trimmedGroup,
+        groups: trimmedGroups,
         imageUrl: trimmedImageUrl,
       })
   
       setTitle('')
       setDescription('')
-      setGroup('')
+      setGroupsInput('')
       setImageUrl('')
       setIsFormOpen(false)
   
@@ -114,18 +123,25 @@ export function CoursesPage() {
     setEditingCourseId(course._id)
     setEditTitle(course.title)
     setEditDescription(course.description)
-    setEditGroup(course.group)
+    setEditGroup(course.groups.join(', '))
     setEditImageUrl(course.imageUrl ?? '')
   }
 
   const handleUpdateCourse = async () => {
     if (!editingCourseId) return
+
+    const editedGroups = editGroup
+      .split(',')
+      .map((group) => group.trim().toUpperCase())
+      .filter(Boolean)
+
     await updateCourse(editingCourseId, {
       title: editTitle,
       description: editDescription,
-      group: editGroup,
+      groups: editedGroups,
       imageUrl: editImageUrl,
     })
+    
     setEditingCourseId(null)
     await refreshCourses()
   }
@@ -177,7 +193,7 @@ export function CoursesPage() {
       {isTeacher && isFormOpen && (
         <CourseCreateForm
           title={title}
-          group={group}
+          groupsInput={groupsInput}
           description={description}
           imageUrl={imageUrl}
           isCreating={isCreating}
@@ -186,7 +202,7 @@ export function CoursesPage() {
           onChangeImageUrl={setImageUrl}
           onSubmit={handleCreateCourse}
           error={createCourseError}
-          onChangeGroup={(value) => setGroup(value.toUpperCase())}
+          onChangeGroup={(value) => setGroupsInput(value)}
         />
       )}
 
@@ -236,11 +252,19 @@ export function CoursesPage() {
                 onJoin={handleJoinCourse}
                 onMessageTeacher={handleMessageTeacher}
                 onOpenCourseChat={openCourseChat}
+                onOpenParticipants={setSelectedCourse}
               />
             ))}
           </div>
         )}
       </div>
+
+      {selectedCourse && (
+        <CourseParticipantsModal
+          course={selectedCourse}
+          onClose={() => setSelectedCourse(null)}
+        />
+      )}
     </div>
   )
 }

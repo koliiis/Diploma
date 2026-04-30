@@ -21,6 +21,8 @@ function ChatPageView({ chatId }: { chatId: string | undefined }) {
     hasMoreMessages,
     sendMessage,
     loadEarlierMessages,
+    editMessage,
+    removeMessage,
   } = useChatMessages(chatId)
 
   const [messageText, setMessageText] = useState('')
@@ -28,23 +30,46 @@ function ChatPageView({ chatId }: { chatId: string | undefined }) {
   const shouldScrollToBottomRef = useRef(true)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const currentUser = useAuthStore((s) => s.user)
+  const isUserNearBottomRef = useRef(true)
 
   useSocketJoinChat(chatId)
 
   useStickToBottomOnChange(
     messagesRef,
     shouldScrollToBottomRef,
+    isUserNearBottomRef,
     messages.length,
   )
+
+  const isNearBottom = () => {
+    const el = messagesRef.current
+    if (!el) return true
+  
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
+  
+    return distanceFromBottom < 120
+  }
+
+  const handleMessagesScroll = () => {
+    isUserNearBottomRef.current = isNearBottom()
+  }
 
   const handleLoadEarlier = async () => {
     shouldScrollToBottomRef.current = false
     await loadEarlierMessages()
   }
 
+  const handleDeleteMessage = async (messageId: string) => {
+    shouldScrollToBottomRef.current = false
+    await removeMessage(messageId)
+  }
+
   const handleSend = async () => {
+    shouldScrollToBottomRef.current = true
+  
     await sendMessage(messageText)
     setMessageText('')
+  
     const el = textareaRef.current
     if (el) {
       el.style.height = 'auto'
@@ -70,6 +95,9 @@ function ChatPageView({ chatId }: { chatId: string | undefined }) {
         isLoadingEarlier={isLoadingEarlier}
         onLoadEarlier={handleLoadEarlier}
         currentUser={currentUser}
+        onEditMessage={editMessage}
+        onDeleteMessage={handleDeleteMessage}
+        onScroll={handleMessagesScroll}
       />
 
       <ChatComposer

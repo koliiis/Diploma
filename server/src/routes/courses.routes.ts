@@ -7,11 +7,23 @@ export const coursesRouter = Router()
 
 coursesRouter.post('/', authMiddleware, async (req: AuthRequest, res) => {
   try {
-    const { title, description, group, imageUrl } = req.body
+    const { title, description, groups, imageUrl } = req.body
 
-    if (!title || !description || !group) {
+    if (!title || !description || !groups || groups.length === 0) {
       return res.status(400).json({
-        error: 'title, description and group are required',
+        error: 'title, description and groups are required',
+      })
+    }
+
+    const groupRegex = /^[А-ЯІЇЄҐ]{2}-\d{2}$/
+
+    const isValidGroups = groups.every((g: string) =>
+      groupRegex.test(g),
+    )
+
+    if (!isValidGroups) {
+      return res.status(400).json({
+        error: 'Invalid group format (e.g. TR-25)',
       })
     }
 
@@ -26,7 +38,7 @@ coursesRouter.post('/', authMiddleware, async (req: AuthRequest, res) => {
     const course = await CourseModel.create({
       title,
       description,
-      group,
+      groups,
       imageUrl,
       teacherId: user.userId,
       studentIds: [],
@@ -105,19 +117,32 @@ coursesRouter.get('/', authMiddleware, async (req: AuthRequest, res) => {
           const chat = await ChatModel.findOne({
             courseId: course._id,
             type: 'course',
+          }).populate('participantIds', 'fullName email role avatarUrl')
+      
+          const isCourseOwner = course.teacherId._id.toString() === user?.userId
+
+          const isStudentJoined = course.studentIds.some(
+            (id) => id.toString() === user?.userId,
+          )
+
+          const isChatParticipant = chat?.participantIds.some((participant: any) => {
+            const participantId = participant._id
+              ? participant._id.toString()
+              : participant.toString()
+          
+            return participantId === user?.userId
           })
+
+          const isJoined = isCourseOwner || isStudentJoined || isChatParticipant
       
-          const isJoined =
-            course.teacherId._id.toString() === user?.userId ||
-            course.studentIds.some((id) => id.toString() === user?.userId)
-      
-          const membersCount = course.studentIds.length + 1
+          const membersCount = chat?.participantIds.length ?? course.studentIds.length + 1
       
           return {
             ...course.toObject(),
             isJoined,
             membersCount,
             chatId: chat?._id,
+            participants: chat?.participantIds ?? [],
           }
         }),
       )
@@ -132,7 +157,7 @@ coursesRouter.get('/', authMiddleware, async (req: AuthRequest, res) => {
 coursesRouter.patch('/:courseId', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const { courseId } = req.params
-    const { title, description, group, imageUrl } = req.body
+    const { title, description, groups, imageUrl } = req.body
 
     const user = req.user
 
@@ -150,9 +175,24 @@ coursesRouter.patch('/:courseId', authMiddleware, async (req: AuthRequest, res) 
       return res.status(403).json({ error: 'You can edit only your own courses' })
     }
 
+    if (groups) {
+      const groupRegex = /^[А-ЯІЇЄҐ]{2}-\d{2}$/
+
+      const isValidGroups =
+        Array.isArray(groups) &&
+        groups.length > 0 &&
+        groups.every((g: string) => groupRegex.test(g))
+
+      if (!isValidGroups) {
+        return res.status(400).json({
+          error: 'Invalid group format',
+        })
+      }
+    }
+
     course.title = title ?? course.title
     course.description = description ?? course.description
-    course.group = group ?? course.group
+    course.groups = groups ?? course.groups
     course.imageUrl = imageUrl ?? course.imageUrl
 
     await course.save()
