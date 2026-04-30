@@ -3,6 +3,7 @@ import { ChatModel } from '../models/chat.model'
 import { CourseModel } from '../models/course.model'
 import { authMiddleware, type AuthRequest } from '../middleware/auth.middleware'
 import { UserModel } from '../models/user.model'
+import { MessageModel } from '../models/message.model'
 
 export const chatsRouter = Router()
 
@@ -50,7 +51,36 @@ chatsRouter.get('/', authMiddleware, async (req: AuthRequest, res) => {
       .populate('participantIds', 'fullName email role avatarUrl')
       .sort({ createdAt: -1 })
 
-    res.json(chats)
+    const result = await Promise.all(
+      chats.map(async (chat) => {
+        const unreadCount = await MessageModel.countDocuments({
+          chatId: chat._id,
+          authorId: { $ne: user.userId },
+          readByIds: { $ne: user.userId },
+        })
+
+        const lastMessage = await MessageModel.findOne({
+          chatId: chat._id,
+        })
+          .sort({ createdAt: -1 })
+          .populate('authorId', 'fullName email avatarUrl')
+    
+        return {
+          ...chat.toObject(),
+          unreadCount,
+          lastMessage,
+          lastMessageAt: lastMessage?.createdAt ?? chat.createdAt,
+        }
+      }),
+    )
+
+    result.sort(
+      (a, b) =>
+        new Date(b.lastMessageAt).getTime() -
+        new Date(a.lastMessageAt).getTime(),
+    )
+    
+    res.json(result)
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Failed to fetch chats' })

@@ -6,6 +6,7 @@ export interface IMessage extends Document {
   content: string
   createdAt: Date
   updatedAt: Date
+  readByIds: Types.ObjectId[]
 }
 
 const messageSchema = new Schema<IMessage>(
@@ -25,6 +26,12 @@ const messageSchema = new Schema<IMessage>(
       required: true,
       trim: true,
     },
+    readByIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   {
     timestamps: true,

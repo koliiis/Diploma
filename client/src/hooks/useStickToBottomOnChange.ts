@@ -1,16 +1,19 @@
-import { type MutableRefObject, type RefObject, useEffect } from 'react'
+import { useEffect, type RefObject } from 'react'
 
 export function useStickToBottomOnChange(
-  containerRef: RefObject<HTMLElement | null>,
-  allowScrollRef: MutableRefObject<boolean>,
-  trigger: number,
+  scrollRef: RefObject<HTMLDivElement | null>,
+  shouldScrollToBottomRef: RefObject<boolean>,
+  isUserNearBottomRef: RefObject<boolean>,
+  dependency: unknown,
 ) {
   useEffect(() => {
-    const el = containerRef.current
+    const el = scrollRef.current
     if (!el) return
-    if (allowScrollRef.current) {
+
+    if (shouldScrollToBottomRef.current || isUserNearBottomRef.current) {
       el.scrollTop = el.scrollHeight
     }
-    allowScrollRef.current = true
-  }, [containerRef, allowScrollRef, trigger])
+
+    shouldScrollToBottomRef.current = false
+  }, [scrollRef, shouldScrollToBottomRef, isUserNearBottomRef, dependency])
 }

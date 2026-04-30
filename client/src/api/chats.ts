@@ -18,8 +18,21 @@ export type Chat = {
     role: string
     avatarUrl?: string
   }[]
+  unreadCount?: number
   createdAt: string
   updatedAt: string
+  lastMessage?: {
+    _id: string
+    content: string
+    createdAt: string
+    authorId: {
+      _id: string
+      fullName: string
+      email: string
+      avatarUrl?: string
+    }
+  }
+  lastMessageAt?: string
 }
 
 export async function getChats(): Promise<Chat[]> {

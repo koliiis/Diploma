@@ -26,6 +26,7 @@ type CourseCardProps = {
   onJoin: (courseId: string) => void
   onMessageTeacher: (teacherId: string) => void
   onOpenCourseChat: (chatId: string) => void
+  onOpenParticipants: (course: Course) => void
 }
 
 export function CourseCard({
@@ -47,6 +48,7 @@ export function CourseCard({
   onJoin,
   onMessageTeacher,
   onOpenCourseChat,
+  onOpenParticipants,
 }: CourseCardProps) {
   const isOwner = course.teacherId._id === currentUserId
   const showNonOwnerActions = course.teacherId._id !== currentUserId
@@ -120,14 +122,17 @@ export function CourseCard({
               </h3>
 
               <p className="mt-1 text-sm font-medium text-gray-500">
-                Група: {course.group}
+                Група: {course.groups.join(', ')}
               </p>
             </div>
           </div>
 
-          <p className="mt-1 text-sm text-gray-500">
+          <span
+            onClick={() => onOpenParticipants(course)}
+            className="mt-1 text-sm text-gray-500 hover:text-gray-700 cursor-pointer"
+          >
             Учасників: {course.membersCount ?? 1}
-          </p>
+          </span>
 
           <p className="mt-2 text-sm text-gray-600">{course.description}</p>
 
@@ -191,7 +196,7 @@ export function CourseCard({
                     onClick={() => onJoin(course._id)}
                     className={buttonPrimarySmallClass}
                   >
-                    До чату курсу
+                    Приєднатися
                   </button>
                 )}
 

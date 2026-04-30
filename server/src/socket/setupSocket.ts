@@ -13,12 +13,30 @@ export function setupSocket(io: Server) {
         typeof data.chatId === 'string'
           ? data.chatId
           : data.chatId?._id
-
-      if (!chatId) {
-        return
-      }
-
+    
+      if (!chatId) return
+    
       io.to(chatId).emit('new-message', data)
+    
+      io.to(chatId).emit('chat-list-updated', {
+        chatId,
+        message: data,
+      })
+    })
+
+    socket.on('edit-message', (message) => {
+      const chatId =
+        typeof message.chatId === 'string'
+          ? message.chatId
+          : message.chatId?._id
+    
+      if (!chatId) return
+    
+      io.to(chatId).emit('message-edited', message)
+    })
+    
+    socket.on('delete-message', ({ messageId, chatId }) => {
+      io.to(chatId).emit('message-deleted', { messageId, chatId })
     })
 
     socket.on('typing', (chatId: string) => {
