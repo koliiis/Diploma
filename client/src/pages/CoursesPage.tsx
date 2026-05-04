@@ -15,6 +15,7 @@ import { CourseListFilters } from '../components/courses/CourseListFilters'
 import { CourseCard } from '../components/courses/CourseCard'
 import { buttonPrimaryClass } from '../components/courses/courseFormClasses'
 import { CourseParticipantsModal } from '../components/courses/CourseParticipantsModal'
+import toast from 'react-hot-toast'
 
 export function CoursesPage() {
   const {
@@ -157,7 +158,7 @@ export function CoursesPage() {
       await joinCourse(courseId)
       await refreshCourses()
     } catch {
-      alert('Не вдалося приєднатися до курсу')
+      toast.error('Не вдалося приєднатися до курсу')
     }
   }
 
@@ -166,7 +167,7 @@ export function CoursesPage() {
       const chat = await createDirectChat(teacherId)
       navigate(`/dashboard/chats/${chat._id}`)
     } catch {
-      alert('Не вдалося відкрити чат з викладачем')
+      toast.error('Не вдалося відкрити чат з викладачем')
     }
   }
 

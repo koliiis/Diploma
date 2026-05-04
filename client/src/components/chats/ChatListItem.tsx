@@ -7,12 +7,16 @@ type ChatListItemProps = {
   chat: Chat
   currentUserId: string | undefined
   onOpenParticipants: (chat: Chat) => void
+  isPinned: boolean
+  onTogglePin: (chatId: string) => void
 }
 
 export function ChatListItem({
   chat,
   currentUserId,
   onOpenParticipants,
+  isPinned,
+  onTogglePin,
 }: ChatListItemProps) {
   const { imageUrl, title } = getChatListDisplay(chat, currentUserId)
   const isCourseChat = chat.type !== 'direct'
@@ -27,6 +31,18 @@ export function ChatListItem({
 
         <div className="min-w-0 flex-1">
           <p className="text-lg font-medium text-gray-900">{title}</p>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onTogglePin(chat._id)
+            }}
+            className="rounded-lg border border-gray-300 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
+          >
+            {isPinned ? 'Відкріпити' : 'Закріпити'}
+          </button>
 
           {chat.unreadCount ? (
             <span className="ml-2 rounded-full bg-black px-2 py-0.5 text-xs text-white">

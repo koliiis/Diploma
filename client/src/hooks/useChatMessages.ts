@@ -14,6 +14,7 @@ import {
 import { mergeMessagesByIdChronological } from '../utils/mergeMessages'
 import { useAuthStore } from '../store/authStore'
 import { socket } from '../socket'
+import toast from 'react-hot-toast'
 
 export function useChatMessages(chatId?: string) {
   const [messages, setMessages] = useState<Message[]>([])
@@ -149,17 +150,17 @@ export function useChatMessages(chatId?: string) {
       setMessages(updatedMessages)
       saveMessages(chatId, updatedMessages)
     } catch {
-      const pendingMessages = nextMessages.map((message) =>
+      const failedMessages = nextMessages.map((message) =>
         message._id === tempId
           ? {
               ...message,
-              localStatus: 'pending' as const,
+              localStatus: 'failed' as const,
             }
           : message,
       )
-
-      setMessages(pendingMessages)
-      saveMessages(chatId, pendingMessages)
+    
+      setMessages(failedMessages)
+      saveMessages(chatId, failedMessages)
     } finally {
       setIsSending(false)
     }
@@ -179,7 +180,7 @@ export function useChatMessages(chatId?: string) {
   
       socket.emit('edit-message', updated)
     } catch {
-      alert('Не вдалося відредагувати повідомлення')
+      toast.error('Не вдалося відредагувати повідомлення')
     }
   }
   
@@ -195,7 +196,7 @@ export function useChatMessages(chatId?: string) {
   
       socket.emit('delete-message', { messageId, chatId })
     } catch {
-      alert('Не вдалося видалити повідомлення')
+      toast.error('Не вдалося видалити повідомлення')
     }
   }
 
@@ -224,6 +225,59 @@ export function useChatMessages(chatId?: string) {
       saveMessages(chatId, mergedMessages)
     } finally {
       setIsLoadingEarlier(false)
+    }
+  }
+
+  const retryMessage = async (messageId: string) => {
+    if (!chatId) return
+  
+    const messageToRetry = messages.find((message) => message._id === messageId)
+  
+    if (!messageToRetry) return
+  
+    const pendingMessages = messages.map((message) =>
+      message._id === messageId
+        ? {
+            ...message,
+            localStatus: 'pending' as const,
+          }
+        : message,
+    )
+  
+    setMessages(pendingMessages)
+    saveMessages(chatId, pendingMessages)
+  
+    try {
+      const savedMessage = await createMessage({
+        chatId,
+        content: messageToRetry.content,
+      })
+  
+      socket.emit('send-message', savedMessage)
+  
+      const updatedMessages = pendingMessages.map((message) =>
+        message._id === messageId
+          ? {
+              ...savedMessage,
+              localStatus: 'sent' as const,
+            }
+          : message,
+      )
+  
+      setMessages(updatedMessages)
+      saveMessages(chatId, updatedMessages)
+    } catch {
+      const failedMessages = pendingMessages.map((message) =>
+        message._id === messageId
+          ? {
+              ...message,
+              localStatus: 'failed' as const,
+            }
+          : message,
+      )
+  
+      setMessages(failedMessages)
+      saveMessages(chatId, failedMessages)
     }
   }
 
@@ -319,5 +373,6 @@ export function useChatMessages(chatId?: string) {
     editMessage,
     removeMessage,
     loadEarlierMessages,
+    retryMessage,
   }
 }

@@ -4,12 +4,14 @@ import { useChatsList } from '../hooks/useChatsList'
 import { useAuthStore } from '../store/authStore'
 import { ChatListItem } from '../components/chats/ChatListItem'
 import { ChatParticipantsModal } from '../components/chats/ChatParticipantsModal'
+import { loadPinnedChatIds, savePinnedChatIds } from '../utils/pinnedChatsStorage'
 
 export function ChatsPage() {
   const { data: chats, isLoading, error } = useChatsList()
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
   const currentUser = useAuthStore((s) => s.user)
   const [searchQuery, setSearchQuery] = useState('')
+  const [pinnedChatIds, setPinnedChatIds] = useState(loadPinnedChatIds)
 
   const filteredChats = useMemo(
     () =>
@@ -39,6 +41,32 @@ export function ChatsPage() {
     [chats, searchQuery, currentUser?._id],
   )
 
+  const togglePinnedChat = (chatId: string) => {
+    setPinnedChatIds((prev) => {
+      const next = prev.includes(chatId)
+        ? prev.filter((id) => id !== chatId)
+        : [...prev, chatId]
+  
+      savePinnedChatIds(next)
+      return next
+    })
+  }
+
+  const sortedChats = useMemo(() => {
+    return [...filteredChats].sort((a, b) => {
+      const aPinned = pinnedChatIds.includes(a._id)
+      const bPinned = pinnedChatIds.includes(b._id)
+  
+      if (aPinned && !bPinned) return -1
+      if (!aPinned && bPinned) return 1
+  
+      return (
+        new Date(b.lastMessageAt ?? b.updatedAt).getTime() -
+        new Date(a.lastMessageAt ?? a.updatedAt).getTime()
+      )
+    })
+  }, [filteredChats, pinnedChatIds])
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900">Чати</h1>
@@ -59,20 +87,22 @@ export function ChatsPage() {
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
-        {!isLoading && !error && filteredChats.length === 0 && (
+        {!isLoading && !error && sortedChats.length === 0 && (
           <p className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-500">
             У вас поки немає чатів. Знайдіть курс і приєднайтесь до чату.
           </p>
         )}
 
-        {!isLoading && !error && filteredChats.length > 0 && (
+        {!isLoading && !error && sortedChats.length > 0 && (
           <div className="space-y-4">
-            {filteredChats.map((chat) => (
+            {sortedChats.map((chat) => (
               <ChatListItem
                 key={chat._id}
                 chat={chat}
                 currentUserId={currentUser?._id}
                 onOpenParticipants={setSelectedChat}
+                isPinned={pinnedChatIds.includes(chat._id)}
+                onTogglePin={togglePinnedChat}
               />
             ))}
           </div>

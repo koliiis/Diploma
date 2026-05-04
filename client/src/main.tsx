@@ -5,6 +5,7 @@ import 'virtual:uno.css'
 import './index.css'
 import { router } from './router'
 import { registerSW } from 'virtual:pwa-register'
+import { Toaster } from 'react-hot-toast'
 
 registerSW({
   immediate: true,
@@ -12,6 +13,9 @@ registerSW({
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <>
+      <RouterProvider router={router} />
+      <Toaster position="top-right" />
+    </>
   </React.StrictMode>,
 )

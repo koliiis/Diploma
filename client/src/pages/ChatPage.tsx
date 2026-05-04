@@ -23,6 +23,7 @@ function ChatPageView({ chatId }: { chatId: string | undefined }) {
     loadEarlierMessages,
     editMessage,
     removeMessage,
+    retryMessage,
   } = useChatMessages(chatId)
 
   const [messageText, setMessageText] = useState('')
@@ -98,6 +99,7 @@ function ChatPageView({ chatId }: { chatId: string | undefined }) {
         onEditMessage={editMessage}
         onDeleteMessage={handleDeleteMessage}
         onScroll={handleMessagesScroll}
+        onRetryMessage={retryMessage}
       />
 
       <ChatComposer
