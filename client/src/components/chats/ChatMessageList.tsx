@@ -16,6 +16,7 @@ type ChatMessageListProps = {
   onEditMessage: (id: string, content: string) => void
   onDeleteMessage: (id: string) => void
   onScroll: () => void
+  onRetryMessage: (messageId: string) => void
 }
 
 export function ChatMessageList({
@@ -29,6 +30,7 @@ export function ChatMessageList({
   onEditMessage,
   onDeleteMessage,
   onScroll,
+  onRetryMessage,
 }: ChatMessageListProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
@@ -157,6 +159,20 @@ export function ChatMessageList({
 
                 {msg.localStatus === 'pending' && (
                   <p className="text-xs opacity-60">Відправляється...</p>
+                )}
+
+                {msg.localStatus === 'failed' && (
+                  <div className="mt-1 flex items-center gap-2 text-xs text-red-500">
+                    <span>Message failed ❌</span>
+
+                    <button
+                      type="button"
+                      onClick={() => onRetryMessage(msg._id)}
+                      className="underline"
+                    >
+                      Retry
+                    </button>
+                  </div>
                 )}
 
                 <p className="mt-1 text-right text-[11px] opacity-60">

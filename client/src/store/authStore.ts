@@ -22,6 +22,7 @@ type AuthState = {
   setAuth: (user: AuthUser, token: string) => void
   isSessionExpired: () => boolean
   logout: () => void
+  updateUser: (user: AuthUser) => void
 }
 
 function isTokenExpired(token: string | null): boolean {
@@ -61,6 +62,11 @@ export const useAuthStore = create<AuthState>()(
           user: null,
           token: null,
           isAuthenticated: false,
+        }),
+
+      updateUser: (user) =>
+        set({
+          user,
         }),
     }),
     {
