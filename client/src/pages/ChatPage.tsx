@@ -32,6 +32,13 @@ function ChatPageView({ chatId }: { chatId: string | undefined }) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const currentUser = useAuthStore((s) => s.user)
   const isUserNearBottomRef = useRef(true)
+  const [selectedFiles, setSelectedFiles] = useState<
+  {
+    url: string
+    name: string
+    type: string
+  }[]
+>([])
 
   useSocketJoinChat(chatId)
 
@@ -68,8 +75,10 @@ function ChatPageView({ chatId }: { chatId: string | undefined }) {
   const handleSend = async () => {
     shouldScrollToBottomRef.current = true
   
-    await sendMessage(messageText)
+    await sendMessage(messageText, selectedFiles)
+
     setMessageText('')
+    setSelectedFiles([])
   
     const el = textareaRef.current
     if (el) {
@@ -108,6 +117,8 @@ function ChatPageView({ chatId }: { chatId: string | undefined }) {
         onSend={handleSend}
         isSending={isSending}
         textareaRef={textareaRef}
+        selectedFiles={selectedFiles}
+        onFilesChange={setSelectedFiles}
       />
     </div>
   )

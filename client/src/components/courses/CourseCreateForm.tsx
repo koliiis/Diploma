@@ -2,6 +2,8 @@ import {
   buttonPrimaryClass,
   fieldClass,
 } from './courseFormClasses'
+import { fileToDataUrl } from '../../utils/fileToDataUrl'
+import { Avatar } from '../ui/Avatar'
 
 type CourseCreateFormProps = {
   title: string
@@ -63,10 +65,21 @@ export function CourseCreateForm({
         />
 
         <input
-          value={imageUrl}
-          onChange={(e) => onChangeImageUrl(e.target.value)}
-          placeholder="Посилання на зображення (необов’язково)"
+          type="file"
+          accept="image/*"
+          onChange={async (e) => {
+            const file = e.target.files?.[0]
+            if (!file) return
+
+            const dataUrl = await fileToDataUrl(file)
+            onChangeImageUrl(dataUrl)
+          }}
           className={fieldClass}
+        />
+
+        <Avatar
+          fullName={title}
+          avatarUrl={imageUrl}
         />
 
         <button

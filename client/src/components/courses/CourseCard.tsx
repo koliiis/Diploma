@@ -1,4 +1,5 @@
 import type { Course } from '../../api/courses'
+import { fileToDataUrl } from '../../utils/fileToDataUrl'
 import { Avatar } from '../ui/Avatar'
 import {
   buttonDangerClass,
@@ -76,10 +77,21 @@ export function CourseCard({
           />
 
           <input
-            value={editImageUrl}
-            onChange={(e) => onEditImageUrlChange(e.target.value)}
+            type="file"
+            accept="image/*"
+            onChange={async (e) => {
+              const file = e.target.files?.[0]
+              if (!file) return
+
+              const dataUrl = await fileToDataUrl(file)
+              onEditImageUrlChange(dataUrl)
+            }}
             className={fieldClass}
-            placeholder="Посилання на зображення"
+          />
+
+          <Avatar
+            fullName={editTitle || course.title}
+            avatarUrl={editImageUrl}
           />
 
           <div className="flex gap-2">

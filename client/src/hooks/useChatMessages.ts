@@ -75,6 +75,7 @@ export function useChatMessages(chatId?: string) {
         const savedMessage = await createMessage({
           chatId,
           content: pendingMessage.content,
+          attachments: pendingMessage.attachments,
         })
 
         socket.emit('send-message', savedMessage)
@@ -99,11 +100,18 @@ export function useChatMessages(chatId?: string) {
     syncRef.current = syncPendingMessages
   }, [syncPendingMessages])
 
-  const sendMessage = async (text: string) => {
+  const sendMessage = async (
+    text: string,
+    attachments: {
+      url: string
+      name: string
+      type: string
+    }[] = [],
+  ) => {
     if (!chatId) return
 
     const trimmedText = text.trim()
-    if (!trimmedText) return
+    if (!trimmedText && attachments.length === 0) return
 
     const tempId = crypto.randomUUID()
 
@@ -121,6 +129,7 @@ export function useChatMessages(chatId?: string) {
         title: 'Поточний чат',
       },
       localStatus: 'pending',
+      attachments,
     }
 
     const nextMessages = [...messages, optimisticMessage]
@@ -134,6 +143,7 @@ export function useChatMessages(chatId?: string) {
       const savedMessage = await createMessage({
         chatId,
         content: trimmedText,
+        attachments,
       })
 
       socket.emit('send-message', savedMessage)
@@ -251,6 +261,7 @@ export function useChatMessages(chatId?: string) {
       const savedMessage = await createMessage({
         chatId,
         content: messageToRetry.content,
+        attachments: messageToRetry.attachments,
       })
   
       socket.emit('send-message', savedMessage)
