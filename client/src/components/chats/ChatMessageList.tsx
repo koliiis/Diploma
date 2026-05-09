@@ -131,6 +131,30 @@ export function ChatMessageList({
                   <p className="whitespace-pre-wrap">{msg.content}</p>
                 )}
 
+                {msg.attachments && msg.attachments.length > 0 && (
+                  <div className="mt-2 grid gap-2">
+                    {msg.attachments.map((file) =>
+                      file.type.startsWith('image/') ? (
+                        <img
+                          key={file.url}
+                          src={file.url}
+                          alt={file.name}
+                          className="max-h-60 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <a
+                          key={file.url}
+                          href={file.url}
+                          download={file.name}
+                          className="text-sm underline"
+                        >
+                          {file.name}
+                        </a>
+                      ),
+                    )}
+                  </div>
+                )}
+
                 {isMine && editingId !== msg._id && (
                   <div className="mt-1 flex gap-2 text-xs opacity-70">
                     <button

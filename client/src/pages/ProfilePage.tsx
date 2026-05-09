@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { updateProfile } from '../api/users'
 import { Avatar } from '../components/ui/Avatar'
 import { useAuthStore } from '../store/authStore'
+import { fileToDataUrl } from '../utils/fileToDataUrl'
 
 type ProfileErrors = {
   fullName?: string
@@ -160,9 +161,15 @@ export function ProfilePage() {
 
             <div>
               <input
-                value={avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-                placeholder="Посилання на аватар"
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+
+                  const dataUrl = await fileToDataUrl(file)
+                  setAvatarUrl(dataUrl)
+                }}
                 className="w-full rounded-lg border border-gray-300 px-4 py-2"
               />
             </div>

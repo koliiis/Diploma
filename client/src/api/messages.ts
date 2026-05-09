@@ -15,6 +15,13 @@ export type Message = {
     title: string
   }
   localStatus?: 'pending' | 'sent' | 'failed'
+  attachments?: MessageAttachment[]
+}
+
+export type MessageAttachment = {
+  url: string
+  name: string
+  type: string
 }
 
 export async function getMessages(params?: {
@@ -45,6 +52,7 @@ export async function getMessages(params?: {
 export async function createMessage(params: {
   chatId: string
   content: string
+  attachments?: MessageAttachment[]
 }): Promise<Message> {
   return apiRequest<Message>('/api/messages', {
     method: 'POST',

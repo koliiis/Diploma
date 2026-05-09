@@ -6,11 +6,19 @@ export const messagesRouter = Router()
 
 messagesRouter.post('/', authMiddleware, async (req: AuthRequest, res) => {
   try {
-    const { chatId, content } = req.body
+    const { chatId, content, attachments: rawAttachments = [] } = req.body
 
-    if (!chatId || !content) {
+    const attachments = Array.isArray(rawAttachments)
+      ? rawAttachments.map((a: { url: string; name: string; type?: string }) => ({
+          url: a.url,
+          name: a.name,
+          type: a.type?.trim() || 'application/octet-stream',
+        }))
+      : []
+
+    if (!chatId || (!content?.trim() && attachments.length === 0)) {
       return res.status(400).json({
-        error: 'chatId and content are required',
+        error: 'chatId and content or attachments are required',
       })
     }
 
@@ -25,7 +33,8 @@ messagesRouter.post('/', authMiddleware, async (req: AuthRequest, res) => {
     const message = await MessageModel.create({
       chatId,
       authorId,
-      content,
+      content: content ?? '',
+      attachments,
       readByIds: [authorId],
     })
 

@@ -7,6 +7,11 @@ export interface IMessage extends Document {
   createdAt: Date
   updatedAt: Date
   readByIds: Types.ObjectId[]
+  attachments?: {
+    url: string
+    name: string
+    type: string
+  }[]
 }
 
 const messageSchema = new Schema<IMessage>(
@@ -23,13 +28,29 @@ const messageSchema = new Schema<IMessage>(
     },
     content: {
       type: String,
-      required: true,
+      default: '',
       trim: true,
     },
     readByIds: [
       {
         type: Schema.Types.ObjectId,
         ref: 'User',
+      },
+    ],
+    attachments: [
+      {
+        url: {
+          type: String,
+          required: true,
+        },
+        name: {
+          type: String,
+          required: true,
+        },
+        type: {
+          type: String,
+          required: true,
+        },
       },
     ],
   },
