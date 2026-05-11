@@ -29,7 +29,7 @@ export function ChatsPage() {
               }`
             : chat.courseId?.title ?? chat.title
   
-        const group = chat.courseId?.group ?? ''
+        const group = chat.courseId?.groups?.join(', ') ?? ''
         const lastMessage = chat.lastMessage?.content ?? ''
   
         return (
@@ -69,32 +69,56 @@ export function ChatsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900">Чати</h1>
-
-      <div className="mt-6 rounded-xl border border-gray-200 bg-white p-4">
+      <div>
+        <p className="text-sm font-semibold uppercase tracking-wide text-[#0b67a3]">
+          Повідомлення
+        </p>
+  
+        <h1 className="mt-2 text-3xl font-bold text-[#10182f] sm:text-4xl">
+          Чати
+        </h1>
+  
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">
+          Переглядайте групові й приватні розмови, закріплюйте важливі чати та
+          швидко знаходьте потрібне повідомлення.
+        </p>
+      </div>
+  
+      <div className="mt-6 rounded-[22px] bg-white p-4 shadow-sm">
         <input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Пошук за назвою, групою або останнім повідомленням..."
-          className="w-full rounded-lg border border-gray-300 px-4 py-2"
+          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-[#10182f] outline-none transition placeholder:text-gray-400 focus:border-[#0b67a3] focus:ring-4 focus:ring-[#0b67a3]/10"
         />
       </div>
-
+  
       <div className="mt-6">
         {isLoading && (
-          <p className="text-sm text-gray-500">Завантаження...</p>
+          <div className="rounded-[22px] bg-white p-6 text-sm text-gray-500 shadow-sm">
+            Завантаження чатів...
+          </div>
         )}
-
-        {error && <p className="text-sm text-red-600">{error}</p>}
-
+  
+        {error && (
+          <div className="rounded-[22px] bg-red-50 p-6 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+  
         {!isLoading && !error && sortedChats.length === 0 && (
-          <p className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-500">
-            У вас поки немає чатів. Знайдіть курс і приєднайтесь до чату.
-          </p>
+          <div className="rounded-[22px] bg-white p-8 text-center shadow-sm">
+            <p className="text-lg font-semibold text-[#10182f]">
+              Чати не знайдено
+            </p>
+            <p className="mt-2 text-sm text-gray-500">
+              Знайдіть курс і приєднайтесь до чату або змініть пошуковий запит.
+            </p>
+          </div>
         )}
-
+  
         {!isLoading && !error && sortedChats.length > 0 && (
-          <div className="space-y-4">
+          <div className="grid gap-4">
             {sortedChats.map((chat) => (
               <ChatListItem
                 key={chat._id}
@@ -108,7 +132,7 @@ export function ChatsPage() {
           </div>
         )}
       </div>
-
+  
       {selectedChat && (
         <ChatParticipantsModal
           chat={selectedChat}

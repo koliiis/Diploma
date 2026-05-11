@@ -177,10 +177,23 @@ export function CoursesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900">Курси</h1>
-
-      {isTeacher && (
-        <div className="mt-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wide text-[#0b67a3]">
+            Навчальні модулі
+          </p>
+  
+          <h1 className="mt-2 text-3xl font-bold text-[#10182f] sm:text-4xl">
+            Курси
+          </h1>
+  
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">
+            Переглядайте доступні курси, приєднуйтесь до чатів курсів або
+            створюйте власні навчальні простори.
+          </p>
+        </div>
+  
+        {isTeacher && (
           <button
             type="button"
             onClick={() => setIsFormOpen((prev) => !prev)}
@@ -188,9 +201,9 @@ export function CoursesPage() {
           >
             {isFormOpen ? 'Закрити форму' : 'Створити курс'}
           </button>
-        </div>
-      )}
-
+        )}
+      </div>
+  
       {isTeacher && isFormOpen && (
         <CourseCreateForm
           title={title}
@@ -206,7 +219,7 @@ export function CoursesPage() {
           onChangeGroup={(value) => setGroupsInput(value)}
         />
       )}
-
+  
       <CourseListFilters
         searchQuery={searchQuery}
         showOnlyMine={showOnlyMine}
@@ -216,22 +229,33 @@ export function CoursesPage() {
         onShowOnlyMineChange={setShowOnlyMine}
         onShowMyGroupOnlyChange={setShowMyGroupOnly}
       />
-
+  
       <div className="mt-6">
         {isLoading && (
-          <p className="text-sm text-gray-500">Завантаження...</p>
+          <div className="rounded-[22px] bg-white p-6 text-sm text-gray-500 shadow-sm">
+            Завантаження курсів...
+          </div>
         )}
-
-        {error && <p className="text-sm text-red-600">{error}</p>}
-
+  
+        {error && (
+          <div className="rounded-[22px] bg-red-50 p-6 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+  
         {!isLoading && !error && filteredCourses.length === 0 && (
-          <p className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-500">
-            Курси не знайдено
-          </p>
+          <div className="rounded-[22px] bg-white p-8 text-center shadow-sm">
+            <p className="text-lg font-semibold text-[#10182f]">
+              Курси не знайдено
+            </p>
+            <p className="mt-2 text-sm text-gray-500">
+              Спробуйте змінити пошуковий запит або фільтри.
+            </p>
+          </div>
         )}
-
-        {!isLoading && !error && (
-          <div className="space-y-4">
+  
+        {!isLoading && !error && filteredCourses.length > 0 && (
+          <div className="grid gap-4">
             {filteredCourses.map((course) => (
               <CourseCard
                 key={course._id}
@@ -259,7 +283,7 @@ export function CoursesPage() {
           </div>
         )}
       </div>
-
+  
       {selectedCourse && (
         <CourseParticipantsModal
           course={selectedCourse}

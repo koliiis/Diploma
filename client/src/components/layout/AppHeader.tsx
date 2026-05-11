@@ -1,6 +1,7 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { Avatar } from '../ui/Avatar'
+import { LogOut, GraduationCap } from 'lucide-react'
 
 export function AppHeader() {
   const user = useAuthStore((s) => s.user)
@@ -13,40 +14,50 @@ export function AppHeader() {
   }
 
   return (
-    <header className="border-b border-gray-200 bg-white">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-        <h2 className="text-lg font-semibold text-gray-900">
-          CampusTalk
-        </h2>
-
-        <nav className="flex items-center gap-4 text-sm">
-          <Link to="/dashboard" className="text-gray-600 hover:text-black">
-            Головна сторінка
-          </Link>
-          <Link to="/dashboard/courses" className="text-gray-600 hover:text-black">
-            Курси
-          </Link>
-          <Link to="/dashboard/chats" className="text-gray-600 hover:text-black">
-            Чати
-          </Link>
-          <Link to="/dashboard/profile" className="text-gray-600 hover:text-black">
-            Профіль
-          </Link>
-        </nav>
-
+    <header className=" top-0 z-50 h-[72px] border-b border-gray-100 bg-white">
+      <div className="flex h-full items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
-        {user && (
-          <div className="flex items-center gap-2">
-            <Avatar fullName={user.fullName} avatarUrl={user.avatarUrl} size="sm" />
-            <span className="text-sm text-gray-600">{user.fullName}</span>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0b5f9f] text-lg font-bold text-white">
+            <GraduationCap size={24} />
           </div>
-        )}
+
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-#000 mb-2 mt-0">
+              Електронний
+            </p>
+            <h1 className="-mt-1 text-xl font-bold leading-none text-[#0b426d] m-0">
+              CampusTalk
+            </h1>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          {user && (
+            <div className="hidden items-center gap-3 sm:flex">
+              <Avatar
+                fullName={user.fullName}
+                avatarUrl={user.avatarUrl}
+                size="sm"
+              />
+
+              <div className="text-right">
+                <p className="text-sm font-semibold text-[#10182f] m-0">
+                  {user.fullName}
+                </p>
+                <p className="text-xs text-gray-500 m-0">
+                  {user.role === 'teacher' ? 'Викладач' : 'Студент'}
+                </p>
+              </div>
+            </div>
+          )}
 
           <button
+            type="button"
             onClick={handleLogout}
-            className="rounded-lg border-none bg-gray-200 text-gray-600 px-3 py-1 text-sm hover:bg-gray-300 cursor-pointer"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 transition hover:bg-gray-50 cursor-pointer"
+            title="Вийти"
           >
-            Вийти
+            <LogOut size={18} />
           </button>
         </div>
       </div>

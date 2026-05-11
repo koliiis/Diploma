@@ -47,7 +47,7 @@ chatsRouter.get('/', authMiddleware, async (req: AuthRequest, res) => {
     const chats = await ChatModel.find({
       participantIds: user.userId,
     })
-      .populate('courseId', 'title description group imageUrl')
+      .populate('courseId', 'title description groups imageUrl')
       .populate('participantIds', 'fullName email role avatarUrl')
       .sort({ createdAt: -1 })
 
