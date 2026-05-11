@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { Pin, PinOff, UsersRound, MessageCircle } from 'lucide-react'
 import type { Chat } from '../../api/chats'
 import { Avatar } from '../ui/Avatar'
 import { getChatListDisplay } from '../../utils/chatDisplay'
@@ -20,78 +21,121 @@ export function ChatListItem({
 }: ChatListItemProps) {
   const { imageUrl, title } = getChatListDisplay(chat, currentUserId)
   const isCourseChat = chat.type !== 'direct'
+  const lastMessagePreview = chat.lastMessage?.content.replace(/\s+/g, ' ')
 
   return (
     <Link
       to={`/dashboard/chats/${chat._id}`}
-      className="block rounded-xl border border-gray-200 bg-white p-4 no-underline hover:bg-gray-50"
+      className="block rounded-[24px] bg-white p-5 no-underline shadow-sm transition hover:shadow-md"
     >
-      <div className="flex items-start gap-4">
-        <Avatar fullName={title} avatarUrl={imageUrl} />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+        <div className="flex items-start gap-4">
+          <Avatar fullName={title} avatarUrl={imageUrl} />
+
+          <div className="min-w-0 flex-1 sm:hidden">
+            <p className="line-clamp-2 text-lg font-bold text-[#10182f]">
+              {title}
+            </p>
+
+            {chat.courseId?.groups?.length ? (
+              <p className="mt-1 text-sm font-medium text-[#0b67a3]">
+                Групи: {chat.courseId.groups.join(', ')}
+              </p>
+            ) : null}
+          </div>
+        </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-lg font-medium text-gray-900">{title}</p>
+          <div className="hidden items-start justify-between gap-4 sm:flex">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="truncate text-xl font-bold text-[#10182f]">
+                  {title}
+                </p>
 
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              onTogglePin(chat._id)
-            }}
-            className="rounded-lg border border-gray-300 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
-          >
-            {isPinned ? 'Відкріпити' : 'Закріпити'}
-          </button>
+                {chat.unreadCount ? (
+                  <span className="rounded-full bg-[#0b67a3] px-2 py-0.5 text-xs font-semibold text-white">
+                    {chat.unreadCount}
+                  </span>
+                ) : null}
+              </div>
 
-          {chat.unreadCount ? (
-            <span className="ml-2 rounded-full bg-black px-2 py-0.5 text-xs text-white">
-              {chat.unreadCount}
-            </span>
-          ) : null}
+              {chat.courseId?.groups?.length ? (
+                <p className="mt-1 text-sm font-medium text-[#0b67a3]">
+                  Групи: {chat.courseId.groups.join(', ')}
+                </p>
+              ) : null}
+            </div>
 
-          {chat.courseId?.group && (
-            <p className="mt-1 text-sm text-gray-500">
-              Група: {chat.courseId.group}
-            </p>
-          )}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onTogglePin(chat._id)
+              }}
+              className="flex shrink-0 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 transition hover:bg-gray-50 cursor-pointer"
+            >
+              {isPinned ? <PinOff size={15} /> : <Pin size={15} />}
+              {isPinned ? 'Відкріпити' : 'Закріпити'}
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 sm:hidden">
+            {chat.unreadCount ? (
+              <span className="rounded-full bg-[#0b67a3] px-2 py-0.5 text-xs font-semibold text-white">
+                {chat.unreadCount}
+              </span>
+            ) : (
+              <span />
+            )}
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onTogglePin(chat._id)
+              }}
+              className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer"
+            >
+              {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
+              {isPinned ? 'Відкріпити' : 'Закріпити'}
+            </button>
+          </div>
 
           {isCourseChat && (
-            <div className="mt-3 flex items-center gap-3">
-              <span
-                role="button"
-                tabIndex={0}
-                className="cursor-pointer text-sm text-gray-500 hover:text-gray-700"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  onOpenParticipants(chat)
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    onOpenParticipants(chat)
-                  }
-                }}
-              >
-                Учасників: {chat.participantIds.length}
-              </span>
-            </div>
+            <p
+              className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition hover:text-[#0b67a3] cursor-pointer"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onOpenParticipants(chat)
+              }}
+            >
+              <UsersRound size={16} />
+              Учасників: {chat.participantIds.length}
+            </p>
           )}
 
-          {chat.lastMessage ? (
-            <p className="mt-1 line-clamp-1 text-sm text-gray-500">
-              {chat.lastMessage.authorId._id === currentUserId
-                ? 'Ви'
-                : chat.lastMessage.authorId.fullName}
-              : {chat.lastMessage.content}
-            </p>
-          ) : (
-            <p className="mt-1 text-sm text-gray-400">
-              Повідомлень ще немає
-            </p>
-          )}
+          <div className="mt-4 rounded-2xl bg-[#f8fafc] p-4">
+            {chat.lastMessage ? (
+              <p className="line-clamp-2 text-sm leading-6 text-gray-600">
+                <span className="font-semibold text-[#10182f]">
+                  {chat.lastMessage.authorId._id === currentUserId
+                    ? 'Ви'
+                    : chat.lastMessage.authorId.fullName}
+                  :
+                </span>{' '}
+                {lastMessagePreview}
+              </p>
+            ) : (
+              <div className="flex items-center gap-2 text-sm text-gray-400">
+                <MessageCircle size={16} />
+                Повідомлень ще немає
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </Link>

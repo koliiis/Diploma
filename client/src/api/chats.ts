@@ -8,7 +8,7 @@ export type Chat = {
     _id: string
     title: string
     description: string
-    group?: string
+    groups?: string[]
     imageUrl?: string
   }
   participantIds: {

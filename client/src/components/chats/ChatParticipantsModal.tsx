@@ -30,13 +30,12 @@ export function ChatParticipantsModal({
             </p>
           </div>
 
-          <button
-            type="button"
+          <p
             onClick={onClose}
-            className="text-sm text-gray-500 hover:text-black"
+            className="text-sm text-gray-500 hover:text-black cursor-pointer"
           >
             Закрити
-          </button>
+          </p>
         </div>
 
         <div className="mt-4 max-h-80 space-y-3 overflow-y-auto">
