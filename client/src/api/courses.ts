@@ -25,7 +25,7 @@ export type Course = {
     avatarUrl?: string
   }[]
 }
-  
+
 export async function getCourses(): Promise<Course[]> {
   return apiRequest<Course[]>('/api/courses')
 }

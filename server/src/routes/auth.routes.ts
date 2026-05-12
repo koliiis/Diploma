@@ -14,7 +14,7 @@ authRouter.post('/register', async (req, res) => {
         error: 'All fields are required',
       })
     }
-    
+
     if (role === 'student' && !group) {
       return res.status(400).json({
         error: 'Group is required for students',

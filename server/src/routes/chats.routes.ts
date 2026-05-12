@@ -1,9 +1,9 @@
 import { Router } from 'express'
+import { authMiddleware, type AuthRequest } from '../middleware/auth.middleware'
 import { ChatModel } from '../models/chat.model'
 import { CourseModel } from '../models/course.model'
-import { authMiddleware, type AuthRequest } from '../middleware/auth.middleware'
-import { UserModel } from '../models/user.model'
 import { MessageModel } from '../models/message.model'
+import { UserModel } from '../models/user.model'
 
 export const chatsRouter = Router()
 
@@ -64,7 +64,7 @@ chatsRouter.get('/', authMiddleware, async (req: AuthRequest, res) => {
         })
           .sort({ createdAt: -1 })
           .populate('authorId', 'fullName email avatarUrl')
-    
+
         return {
           ...chat.toObject(),
           unreadCount,
@@ -79,7 +79,7 @@ chatsRouter.get('/', authMiddleware, async (req: AuthRequest, res) => {
         new Date(b.lastMessageAt).getTime() -
         new Date(a.lastMessageAt).getTime(),
     )
-    
+
     res.json(result)
   } catch (error) {
     console.error(error)

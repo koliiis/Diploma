@@ -168,7 +168,7 @@ export function useChatMessages(chatId?: string) {
             }
           : message,
       )
-    
+
       setMessages(failedMessages)
       saveMessages(chatId, failedMessages)
     } finally {
@@ -179,7 +179,7 @@ export function useChatMessages(chatId?: string) {
   const editMessage = async (messageId: string, content: string) => {
     try {
       const updated = await updateMessage(messageId, content)
-  
+
       setMessages((prev) => {
         const next = prev.map((m) =>
           m._id === messageId ? updated : m,
@@ -187,23 +187,23 @@ export function useChatMessages(chatId?: string) {
         saveMessages(chatId!, next)
         return next
       })
-  
+
       socket.emit('edit-message', updated)
     } catch {
       toast.error('Не вдалося відредагувати повідомлення')
     }
   }
-  
+
   const removeMessage = async (messageId: string) => {
     try {
       await deleteMessage(messageId)
-  
+
       setMessages((prev) => {
         const next = prev.filter((m) => m._id !== messageId)
         saveMessages(chatId!, next)
         return next
       })
-  
+
       socket.emit('delete-message', { messageId, chatId })
     } catch {
       toast.error('Не вдалося видалити повідомлення')
@@ -240,11 +240,11 @@ export function useChatMessages(chatId?: string) {
 
   const retryMessage = async (messageId: string) => {
     if (!chatId) return
-  
+
     const messageToRetry = messages.find((message) => message._id === messageId)
-  
+
     if (!messageToRetry) return
-  
+
     const pendingMessages = messages.map((message) =>
       message._id === messageId
         ? {
@@ -253,19 +253,19 @@ export function useChatMessages(chatId?: string) {
           }
         : message,
     )
-  
+
     setMessages(pendingMessages)
     saveMessages(chatId, pendingMessages)
-  
+
     try {
       const savedMessage = await createMessage({
         chatId,
         content: messageToRetry.content,
         attachments: messageToRetry.attachments,
       })
-  
+
       socket.emit('send-message', savedMessage)
-  
+
       const updatedMessages = pendingMessages.map((message) =>
         message._id === messageId
           ? {
@@ -274,7 +274,7 @@ export function useChatMessages(chatId?: string) {
             }
           : message,
       )
-  
+
       setMessages(updatedMessages)
       saveMessages(chatId, updatedMessages)
     } catch {
@@ -286,7 +286,7 @@ export function useChatMessages(chatId?: string) {
             }
           : message,
       )
-  
+
       setMessages(failedMessages)
       saveMessages(chatId, failedMessages)
     }
@@ -305,31 +305,31 @@ export function useChatMessages(chatId?: string) {
 
   useEffect(() => {
     if (!chatId) return
-  
+
     async function handleNewMessage(message: Message) {
       const messageChatId =
         typeof message.chatId === 'string'
           ? message.chatId
           : message.chatId._id
-    
+
       if (messageChatId !== chatId) return
-    
+
       void markMessagesAsRead(chatId)
-    
+
       setMessages((prev) => {
         const alreadyExists = prev.some((m) => m._id === message._id)
-    
+
         if (alreadyExists) return prev
-    
+
         const nextMessages = mergeMessagesByIdChronological(prev, [message])
         saveMessages(chatId, nextMessages)
-    
+
         return nextMessages
       })
     }
-  
+
     socket.on('new-message', handleNewMessage)
-  
+
     return () => {
       socket.off('new-message', handleNewMessage)
     }
@@ -348,26 +348,26 @@ export function useChatMessages(chatId?: string) {
 
   useEffect(() => {
     if (!chatId) return
-  
+
     function handleEdit(message: Message) {
       if (message.chatId._id !== chatId) return
-  
+
       setMessages((prev) =>
         prev.map((m) => (m._id === message._id ? message : m)),
       )
     }
-  
+
     function handleDelete(data: { messageId: string; chatId: string }) {
       if (data.chatId !== chatId) return
-  
+
       setMessages((prev) =>
         prev.filter((m) => m._id !== data.messageId),
       )
     }
-  
+
     socket.on('message-edited', handleEdit)
     socket.on('message-deleted', handleDelete)
-  
+
     return () => {
       socket.off('message-edited', handleEdit)
       socket.off('message-deleted', handleDelete)

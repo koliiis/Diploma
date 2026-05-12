@@ -26,25 +26,25 @@ export function RegisterPage() {
 
   const validateForm = () => {
     const nextErrors: RegisterErrors = {}
-  
+
     const trimmedFullName = fullName.trim()
     const trimmedEmail = email.trim()
     const trimmedGroup = group.trim()
-  
+
     const ukrainianFullNameRegex =
       /^[А-ЯІЇЄҐ][а-яіїєґ']+\s+[А-ЯІЇЄҐ][а-яіїєґ']+$/
-  
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  
+
     const groupRegex = /^[А-ЯІЇЄҐ]{2}-\d{2}$/
-  
+
     if (!trimmedFullName) {
       nextErrors.fullName = 'Вкажіть імʼя та прізвище'
     } else if (!ukrainianFullNameRegex.test(trimmedFullName)) {
       nextErrors.fullName =
         'Імʼя та прізвище мають бути українською, наприклад: Анна Коваленко'
     }
-  
+
     if (role === 'student') {
       if (!trimmedGroup) {
         nextErrors.group = 'Вкажіть групу'
@@ -52,39 +52,39 @@ export function RegisterPage() {
         nextErrors.group = 'Формат групи має бути як ТР-25'
       }
     }
-  
+
     if (!trimmedEmail) {
       nextErrors.email = 'Вкажіть електронну адресу'
     } else if (!emailRegex.test(trimmedEmail)) {
       nextErrors.email = 'Введіть коректну електронну адресу'
     }
-  
+
     if (!password) {
       nextErrors.password = 'Вкажіть пароль'
     } else if (password.length < 8 || !/\d/.test(password)) {
       nextErrors.password =
         'Пароль має містити щонайменше 8 символів і хоча б одну цифру'
     }
-  
+
     return nextErrors
   }
 
   const handleRegister = async () => {
     const validationErrors = validateForm()
-  
+
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors)
       return
     }
-  
+
     const trimmedFullName = fullName.trim()
     const trimmedEmail = email.trim()
     const trimmedGroup = group.trim()
-  
+
     try {
       setErrors({})
       setIsSubmitting(true)
-  
+
       await register({
         fullName: trimmedFullName,
         email: trimmedEmail,
@@ -92,14 +92,14 @@ export function RegisterPage() {
         role,
         group: role === 'student' ? trimmedGroup : undefined,
       })
-  
+
       const loginData = await login({
         email: trimmedEmail,
         password,
       })
-  
+
       localStorage.setItem('campustalk_last_email', trimmedEmail)
-  
+
       setAuth(loginData.user, loginData.token)
       navigate('/dashboard')
     } catch {
@@ -121,7 +121,7 @@ export function RegisterPage() {
             Створіть обліковий запис для доступу до курсів, чатів і повідомлень.
           </p>
         </div>
-  
+
         <div className="space-y-4">
           <select
             value={role}
@@ -131,7 +131,7 @@ export function RegisterPage() {
             <option value="student">Студент</option>
             <option value="teacher">Викладач</option>
           </select>
-  
+
           <div>
             <input
               value={fullName}
@@ -143,7 +143,7 @@ export function RegisterPage() {
               <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>
             )}
           </div>
-  
+
           {role === 'student' && (
             <div>
               <input
@@ -157,7 +157,7 @@ export function RegisterPage() {
               )}
             </div>
           )}
-  
+
           <div>
             <input
               value={email}
@@ -169,7 +169,7 @@ export function RegisterPage() {
               <p className="mt-1 text-sm text-red-600">{errors.email}</p>
             )}
           </div>
-  
+
           <div>
             <input
               type="password"
@@ -182,13 +182,13 @@ export function RegisterPage() {
               <p className="mt-1 text-sm text-red-600">{errors.password}</p>
             )}
           </div>
-  
+
           {errors.general && (
             <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
               {errors.general}
             </p>
           )}
-  
+
           <button
             type="button"
             onClick={handleRegister}
@@ -197,7 +197,7 @@ export function RegisterPage() {
           >
             {isSubmitting ? 'Реєстрація...' : 'Зареєструватися'}
           </button>
-  
+
           <p className="text-center text-sm text-gray-500">
             Уже маєте акаунт?{' '}
             <Link
@@ -209,7 +209,7 @@ export function RegisterPage() {
           </p>
         </div>
       </div>
-      
+
       <p className="mt-6 text-center text-xs text-gray-400">
         © 2026 CampusTalk. Навчальна комунікаційна система.
       </p>

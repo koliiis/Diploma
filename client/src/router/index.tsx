@@ -7,9 +7,9 @@ import { CoursesPage } from '../pages/CoursesPage'
 import { DashboardPage } from '../pages/DashboardPage'
 import { LoginPage } from '../pages/LoginPage'
 import { ProfilePage } from '../pages/ProfilePage'
-import { ProtectedRoute } from './ProtectedRoute'
-import { AuthRedirect } from './AuthRedirect'
 import { RegisterPage } from '../pages/RegisterPage'
+import { AuthRedirect } from './AuthRedirect'
+import { ProtectedRoute } from './ProtectedRoute'
 
 export const router = createBrowserRouter([
   {

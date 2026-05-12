@@ -43,7 +43,7 @@ coursesRouter.post('/', authMiddleware, async (req: AuthRequest, res) => {
       teacherId: user.userId,
       studentIds: [],
     })
-    
+
     await ChatModel.create({
       title,
       type: 'course',
@@ -76,7 +76,7 @@ coursesRouter.post('/:courseId/join', authMiddleware, async (req: AuthRequest, r
     const alreadyJoined = course.studentIds.some(
       (studentId) => studentId.toString() === user.userId,
     )
-    
+
     if (!alreadyJoined && user.role === 'student') {
       course.studentIds.push(user.userId as any)
       await course.save()
@@ -86,12 +86,12 @@ coursesRouter.post('/:courseId/join', authMiddleware, async (req: AuthRequest, r
       courseId: course._id,
       type: 'course',
     })
-    
+
     if (chat) {
       const alreadyInChat = chat.participantIds.some(
         (participantId) => participantId.toString() === user.userId,
       )
-    
+
       if (!alreadyInChat) {
         chat.participantIds.push(user.userId as any)
         await chat.save()
@@ -118,7 +118,7 @@ coursesRouter.get('/', authMiddleware, async (req: AuthRequest, res) => {
             courseId: course._id,
             type: 'course',
           }).populate('participantIds', 'fullName email role avatarUrl')
-      
+
           const isCourseOwner = course.teacherId._id.toString() === user?.userId
 
           const isStudentJoined = course.studentIds.some(
@@ -129,14 +129,14 @@ coursesRouter.get('/', authMiddleware, async (req: AuthRequest, res) => {
             const participantId = participant._id
               ? participant._id.toString()
               : participant.toString()
-          
+
             return participantId === user?.userId
           })
 
           const isJoined = isCourseOwner || isStudentJoined || isChatParticipant
-      
+
           const membersCount = chat?.participantIds.length ?? course.studentIds.length + 1
-      
+
           return {
             ...course.toObject(),
             isJoined,

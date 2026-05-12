@@ -52,7 +52,7 @@ export function AppSidebar() {
             </h1>
           </div>
         </div>
-        
+
         <nav className="space-y-2">
           {navItems.map((item) => {
             const isActive = location.pathname === item.to

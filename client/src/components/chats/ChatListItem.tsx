@@ -122,9 +122,9 @@ export function ChatListItem({
             {chat.lastMessage ? (
               <p className="line-clamp-2 text-sm leading-6 text-gray-600">
                 <span className="font-semibold text-[#10182f]">
-                  {chat.lastMessage.authorId._id === currentUserId
+                  {chat.lastMessage.authorId?._id === currentUserId
                     ? 'Ви'
-                    : chat.lastMessage.authorId.fullName}
+                    : chat.lastMessage.authorId?.fullName ?? 'Користувач'}
                   :
                 </span>{' '}
                 {lastMessagePreview}

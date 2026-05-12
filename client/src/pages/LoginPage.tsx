@@ -16,23 +16,23 @@ export function LoginPage() {
 
   const handleLogin = async () => {
     const trimmedEmail = email.trim()
-  
+
     if (!trimmedEmail || !password.trim()) {
       setError('Заповніть електронну адресу й пароль')
       return
     }
-  
+
     try {
       setError(null)
       setIsSubmitting(true)
-  
+
       const data = await login({
         email: trimmedEmail,
         password,
       })
-  
+
       localStorage.setItem('campustalk_last_email', trimmedEmail)
-  
+
       setAuth(data.user, data.token)
       navigate('/dashboard')
     } catch {
@@ -53,7 +53,7 @@ export function LoginPage() {
             користування системою.
           </p>
         </div>
-  
+
         <div className="space-y-4">
           <input
             value={email}
@@ -61,7 +61,7 @@ export function LoginPage() {
             placeholder="Логін або електронна пошта"
             className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
           />
-  
+
           <input
             type="password"
             value={password}
@@ -69,13 +69,13 @@ export function LoginPage() {
             placeholder="Пароль"
             className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
           />
-  
+
           {error && (
             <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
               {error}
             </p>
           )}
-  
+
           <button
             type="button"
             onClick={handleLogin}
@@ -84,7 +84,7 @@ export function LoginPage() {
           >
             {isSubmitting ? 'Вхід...' : 'Увійти'}
           </button>
-  
+
           <p className="text-center text-sm text-gray-500">
             Немає акаунта?{' '}
             <Link
@@ -96,7 +96,7 @@ export function LoginPage() {
           </p>
         </div>
       </div>
-  
+
       <p className="mt-6 text-center text-xs text-gray-400">
         © 2026 CampusTalk. Навчальна комунікаційна система.
       </p>
