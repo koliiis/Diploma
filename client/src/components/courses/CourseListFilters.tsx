@@ -28,7 +28,7 @@ export function CourseListFilters({
           placeholder="Пошук за назвою курсу чи групою…"
           className={`flex-1 ${fieldClass}`}
         />
-  
+
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <label className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-600">
             <input
@@ -38,7 +38,7 @@ export function CourseListFilters({
             />
             Мої курси
           </label>
-  
+
           {canFilterByGroup && (
             <label className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-600">
               <input

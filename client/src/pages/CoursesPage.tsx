@@ -50,11 +50,11 @@ export function CoursesPage() {
     () =>
       courses.filter((course) => {
         const query = searchQuery.toLowerCase().trim()
-  
+
         const title = course.title?.toLowerCase() ?? ''
-  
+
         const matchesMine = showOnlyMine ? course.isJoined : true
-  
+
         const courseGroups = course.groups ?? []
         const userGroup = user?.group?.toLowerCase() ?? ''
 
@@ -65,10 +65,10 @@ export function CoursesPage() {
             ? courseGroups.some((group) => group.toLowerCase() === userGroup)
             : true
 
-        
+
         const matchesSearch =
           title.includes(query) || groupValue.includes(query)
-  
+
         return matchesSearch && matchesMine && matchesMyGroup
       }),
     [courses, searchQuery, showOnlyMine, showMyGroupOnly, user?.group],
@@ -82,36 +82,36 @@ export function CoursesPage() {
       .map((group) => group.trim().toUpperCase())
       .filter(Boolean)
     const trimmedImageUrl = imageUrl.trim()
-  
+
     const groupRegex = /^[А-ЯІЇЄҐA-Z]{2}-\d{2}$/
-  
+
     if (!trimmedTitle || !trimmedDescription || !trimmedGroups.length) {
       setCreateCourseError('Заповніть назву, опис і групу курсу')
       return
     }
-  
+
     if (!trimmedGroups.every((group) => groupRegex.test(group))) {
       setCreateCourseError('Формат групи має бути як ТР-25 або ж ТР-21, ТР-22')
       return
     }
-  
+
     try {
       setCreateCourseError(null)
       setIsCreating(true)
-  
+
       await createCourse({
         title: trimmedTitle,
         description: trimmedDescription,
         groups: trimmedGroups,
         imageUrl: trimmedImageUrl,
       })
-  
+
       setTitle('')
       setDescription('')
       setGroupsInput('')
       setImageUrl('')
       setIsFormOpen(false)
-  
+
       await refreshCourses()
     } catch {
       setCreateCourseError('Не вдалося створити курс')
@@ -142,7 +142,7 @@ export function CoursesPage() {
       groups: editedGroups,
       imageUrl: editImageUrl,
     })
-    
+
     setEditingCourseId(null)
     await refreshCourses()
   }
@@ -182,17 +182,17 @@ export function CoursesPage() {
           <p className="text-sm font-semibold uppercase tracking-wide text-[#0b67a3]">
             Навчальні модулі
           </p>
-  
+
           <h1 className="mt-2 text-3xl font-bold text-[#10182f] sm:text-4xl">
             Курси
           </h1>
-  
+
           <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">
             Переглядайте доступні курси, приєднуйтесь до чатів курсів або
             створюйте власні навчальні простори.
           </p>
         </div>
-  
+
         {isTeacher && (
           <button
             type="button"
@@ -203,7 +203,7 @@ export function CoursesPage() {
           </button>
         )}
       </div>
-  
+
       {isTeacher && isFormOpen && (
         <CourseCreateForm
           title={title}
@@ -219,7 +219,7 @@ export function CoursesPage() {
           onChangeGroup={(value) => setGroupsInput(value)}
         />
       )}
-  
+
       <CourseListFilters
         searchQuery={searchQuery}
         showOnlyMine={showOnlyMine}
@@ -229,20 +229,20 @@ export function CoursesPage() {
         onShowOnlyMineChange={setShowOnlyMine}
         onShowMyGroupOnlyChange={setShowMyGroupOnly}
       />
-  
+
       <div className="mt-6">
         {isLoading && (
           <div className="rounded-[22px] bg-white p-6 text-sm text-gray-500 shadow-sm">
             Завантаження курсів...
           </div>
         )}
-  
+
         {error && (
           <div className="rounded-[22px] bg-red-50 p-6 text-sm text-red-600">
             {error}
           </div>
         )}
-  
+
         {!isLoading && !error && filteredCourses.length === 0 && (
           <div className="rounded-[22px] bg-white p-8 text-center shadow-sm">
             <p className="text-lg font-semibold text-[#10182f]">
@@ -253,7 +253,7 @@ export function CoursesPage() {
             </p>
           </div>
         )}
-  
+
         {!isLoading && !error && filteredCourses.length > 0 && (
           <div className="grid gap-4">
             {filteredCourses.map((course) => (
@@ -283,7 +283,7 @@ export function CoursesPage() {
           </div>
         )}
       </div>
-  
+
       {selectedCourse && (
         <CourseParticipantsModal
           course={selectedCourse}

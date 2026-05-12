@@ -41,10 +41,10 @@ export function CourseCreateForm({
             Заповніть інформацію про курс і групи, для яких він доступний.
           </p>
         </div>
-  
+
         <Avatar fullName={title || 'Курс'} avatarUrl={imageUrl} />
       </div>
-  
+
       <div className="mt-5 grid gap-4">
         <input
           value={title}
@@ -52,21 +52,21 @@ export function CourseCreateForm({
           placeholder="Назва курсу"
           className={fieldClass}
         />
-  
+
         <input
           value={groupsInput}
           onChange={(e) => onChangeGroup(e.target.value)}
           placeholder="Групи, наприклад ТР-25, КН-21"
           className={fieldClass}
         />
-  
+
         <textarea
           value={description}
           onChange={(e) => onChangeDescription(e.target.value)}
           placeholder="Опис курсу"
           className={`${fieldClass} min-h-28 resize-none`}
         />
-  
+
         <label className="rounded-xl border border-dashed border-gray-300 bg-[#f8fafc] p-4 text-sm text-gray-600">
           <span className="font-semibold text-[#10182f]">
             Обрати зображення курсу
@@ -74,27 +74,27 @@ export function CourseCreateForm({
           <span className="mt-1 block text-xs text-gray-500">
             PNG або JPG. Зображення буде відображатися в курсі та чаті.
           </span>
-  
+
           <input
             type="file"
             accept="image/*"
             onChange={async (e) => {
               const file = e.target.files?.[0]
               if (!file) return
-  
+
               const dataUrl = await fileToDataUrl(file)
               onChangeImageUrl(dataUrl)
             }}
             className="mt-3 block w-full text-sm"
           />
         </label>
-  
+
         {error && (
           <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
             {error}
           </p>
         )}
-  
+
         <button
           type="button"
           onClick={onSubmit}

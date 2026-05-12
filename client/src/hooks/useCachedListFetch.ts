@@ -13,8 +13,8 @@ export function useCachedListFetch<T>({
   fetch: fetchList,
   fetchErrorMessage,
 }: Options<T>) {
-  const [data, setData] = useState<T[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [data, setData] = useState<T[]>(() => loadCache())
+  const [isLoading, setIsLoading] = useState(() => loadCache().length === 0)
   const [error, setError] = useState<string | null>(null)
 
   const refetch = useCallback(async () => {
@@ -24,12 +24,7 @@ export function useCachedListFetch<T>({
   }, [fetchList, saveCache])
 
   useEffect(() => {
-    const cached = loadCache()
-
-    if (cached.length > 0) {
-      setData(cached)
-      setIsLoading(false)
-    }
+    const cachedAtRun = loadCache()
 
     async function run() {
       try {
@@ -38,7 +33,7 @@ export function useCachedListFetch<T>({
         saveCache(fresh)
         setError(null)
       } catch {
-        if (cached.length === 0) {
+        if (cachedAtRun.length === 0) {
           setError(fetchErrorMessage)
         }
       } finally {

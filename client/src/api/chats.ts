@@ -30,7 +30,7 @@ export type Chat = {
       fullName: string
       email: string
       avatarUrl?: string
-    }
+    } | null
   }
   lastMessageAt?: string
 }

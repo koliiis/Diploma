@@ -4,11 +4,11 @@ import express from 'express'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
 import { connectToDatabase } from './config/db'
-import { usersRouter } from './routes/users.routes'
-import { coursesRouter } from './routes/courses.routes'
-import { chatsRouter } from './routes/chats.routes'
-import { messagesRouter } from './routes/messages.routes'
 import { authRouter } from './routes/auth.routes'
+import { chatsRouter } from './routes/chats.routes'
+import { coursesRouter } from './routes/courses.routes'
+import { messagesRouter } from './routes/messages.routes'
+import { usersRouter } from './routes/users.routes'
 import { setupSocket } from './socket/setupSocket'
 
 dotenv.config()
@@ -30,10 +30,10 @@ app.use(cors())
 app.use(express.json({ limit: '10mb' }))
 
 app.use('/api/auth', authRouter)
-app.use('/api/users', usersRouter)
-app.use('/api/courses', coursesRouter)
 app.use('/api/chats', chatsRouter)
+app.use('/api/courses', coursesRouter)
 app.use('/api/messages', messagesRouter)
+app.use('/api/users', usersRouter)
 
 app.get('/api/health', (_req, res) => {
   res.json({

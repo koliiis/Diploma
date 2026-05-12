@@ -1,5 +1,6 @@
 import type { RefObject } from 'react'
 import { fileToDataUrl } from '../../utils/fileToDataUrl'
+import { PlusIcon } from 'lucide-react'
 
 type Attachment = {
   url: string
@@ -38,19 +39,19 @@ export function ChatComposer({
   }
 
   return (
-    <div className="flex gap-2 border-t p-3">
+    <div className="border-t border-gray-100 bg-white p-3">
       {selectedFiles.length > 0 && (
-        <div className="mb-2 flex flex-wrap gap-2">
+        <div className="mb-3 flex flex-wrap gap-2">
           {selectedFiles.map((file) => (
             <div
               key={file.url}
-              className="relative rounded-lg border border-gray-200 bg-gray-50 p-2"
+              className="rounded-2xl border border-gray-200 bg-[#f8fafc] p-2"
             >
               {file.type.startsWith('image/') ? (
                 <img
                   src={file.url}
                   alt={file.name}
-                  className="h-24 w-24 rounded-lg object-cover"
+                  className="h-24 w-24 rounded-xl object-cover"
                 />
               ) : (
                 <p className="max-w-40 truncate text-sm text-gray-600">
@@ -61,7 +62,9 @@ export function ChatComposer({
               <button
                 type="button"
                 onClick={() =>
-                  onFilesChange(selectedFiles.filter((item) => item.url !== file.url))
+                  onFilesChange(
+                    selectedFiles.filter((item) => item.url !== file.url),
+                  )
                 }
                 className="mt-1 text-xs text-red-600"
               >
@@ -72,53 +75,57 @@ export function ChatComposer({
         </div>
       )}
 
-      <input
-        type="file"
-        multiple
-        onChange={async (e) => {
-          const files = Array.from(e.target.files ?? [])
+      <div className="flex items-end gap-2">
+        <label className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50">
+          <PlusIcon className="h-4 w-4" />
+          <input
+            type="file"
+            multiple
+            onChange={async (e) => {
+              const files = Array.from(e.target.files ?? [])
 
-          const attachments = await Promise.all(
-            files.map(async (file) => ({
-              url: await fileToDataUrl(file),
-              name: file.name,
-              type: file.type || 'application/octet-stream',
-            })),
-          )
+              const attachments = await Promise.all(
+                files.map(async (file) => ({
+                  url: await fileToDataUrl(file),
+                  name: file.name,
+                  type: file.type || 'application/octet-stream',
+                })),
+              )
 
-          onFilesChange([...selectedFiles, ...attachments])
+              onFilesChange([...selectedFiles, ...attachments])
+              e.target.value = ''
+            }}
+            className="hidden"
+          />
+        </label>
 
-          e.target.value = ''
-        }}
-        className="text-sm"
-      />
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(e) => {
+            onChange(e.target.value)
+            requestAnimationFrame(adjustHeight)
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault()
+              onSend()
+            }
+          }}
+          placeholder="Напишіть повідомлення..."
+          rows={1}
+          className="max-h-[120px] flex-1 resize-none overflow-y-auto rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#0b67a3] focus:ring-4 focus:ring-[#0b67a3]/10"
+        />
 
-      <textarea
-        ref={textareaRef}
-        value={value}
-        onChange={(e) => {
-          onChange(e.target.value)
-          requestAnimationFrame(adjustHeight)
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault()
-            onSend()
-          }
-        }}
-        placeholder="Напишіть повідомлення..."
-        rows={1}
-        className="max-h-[120px] flex-1 resize-none overflow-y-auto rounded-lg border border-gray-300 px-4 py-2"
-      />
-
-      <button
-        type="button"
-        onClick={onSend}
-        disabled={isSending || (!value.trim() && selectedFiles.length === 0)}
-        className="rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
-      >
-        {isSending ? 'Відправлення...' : 'Надіслати'}
-      </button>
+        <button
+          type="button"
+          onClick={onSend}
+          disabled={isSending || (!value.trim() && selectedFiles.length === 0)}
+          className="h-11 shrink-0 rounded-xl bg-[#0b67a3] px-4 text-sm font-semibold text-white hover:bg-[#095985] disabled:opacity-50"
+        >
+          {isSending ? '...' : 'Надіслати'}
+        </button>
+      </div>
     </div>
   )
 }

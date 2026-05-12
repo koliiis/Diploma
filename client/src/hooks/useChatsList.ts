@@ -5,22 +5,24 @@ import { socket } from '../socket'
 import { useCachedListFetch } from './useCachedListFetch'
 
 export function useChatsList() {
-  const result = useCachedListFetch({
+  const listState = useCachedListFetch({
     loadCache: loadChats,
     saveCache: saveChats,
     fetch: getChats,
     fetchErrorMessage: 'Не вдалося завантажити чати',
   })
 
+  const { data, refetch } = listState
+
   useEffect(() => {
-    result.data.forEach((chat) => {
+    data.forEach((chat) => {
       socket.emit('join-chat', chat._id)
     })
-  }, [result.data])
+  }, [data])
 
   useEffect(() => {
     function handleChatListUpdated() {
-      void result.refetch()
+      void refetch()
     }
 
     socket.on('chat-list-updated', handleChatListUpdated)
@@ -28,7 +30,7 @@ export function useChatsList() {
     return () => {
       socket.off('chat-list-updated', handleChatListUpdated)
     }
-  }, [result.refetch])
+  }, [refetch])
 
-  return result
+  return listState
 }

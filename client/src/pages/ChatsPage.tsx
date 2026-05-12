@@ -17,21 +17,21 @@ export function ChatsPage() {
     () =>
       chats.filter((chat) => {
         const query = searchQuery.toLowerCase().trim()
-  
+
         const otherParticipant = chat.participantIds.find(
           (participant) => participant._id !== currentUser?._id,
         )
-  
+
         const title =
           chat.type === 'direct'
             ? `Приватні повідомлення з ${
                 otherParticipant?.fullName ?? 'користувачем'
               }`
             : chat.courseId?.title ?? chat.title
-  
+
         const group = chat.courseId?.groups?.join(', ') ?? ''
         const lastMessage = chat.lastMessage?.content ?? ''
-  
+
         return (
           title.toLowerCase().includes(query) ||
           group.toLowerCase().includes(query) ||
@@ -46,7 +46,7 @@ export function ChatsPage() {
       const next = prev.includes(chatId)
         ? prev.filter((id) => id !== chatId)
         : [...prev, chatId]
-  
+
       savePinnedChatIds(next)
       return next
     })
@@ -56,10 +56,10 @@ export function ChatsPage() {
     return [...filteredChats].sort((a, b) => {
       const aPinned = pinnedChatIds.includes(a._id)
       const bPinned = pinnedChatIds.includes(b._id)
-  
+
       if (aPinned && !bPinned) return -1
       if (!aPinned && bPinned) return 1
-  
+
       return (
         new Date(b.lastMessageAt ?? b.updatedAt).getTime() -
         new Date(a.lastMessageAt ?? a.updatedAt).getTime()
@@ -73,17 +73,17 @@ export function ChatsPage() {
         <p className="text-sm font-semibold uppercase tracking-wide text-[#0b67a3]">
           Повідомлення
         </p>
-  
+
         <h1 className="mt-2 text-3xl font-bold text-[#10182f] sm:text-4xl">
           Чати
         </h1>
-  
+
         <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">
           Переглядайте групові й приватні розмови, закріплюйте важливі чати та
           швидко знаходьте потрібне повідомлення.
         </p>
       </div>
-  
+
       <div className="mt-6 rounded-[22px] bg-white p-4 shadow-sm">
         <input
           value={searchQuery}
@@ -92,20 +92,20 @@ export function ChatsPage() {
           className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-[#10182f] outline-none transition placeholder:text-gray-400 focus:border-[#0b67a3] focus:ring-4 focus:ring-[#0b67a3]/10"
         />
       </div>
-  
+
       <div className="mt-6">
         {isLoading && (
           <div className="rounded-[22px] bg-white p-6 text-sm text-gray-500 shadow-sm">
             Завантаження чатів...
           </div>
         )}
-  
+
         {error && (
           <div className="rounded-[22px] bg-red-50 p-6 text-sm text-red-600">
             {error}
           </div>
         )}
-  
+
         {!isLoading && !error && sortedChats.length === 0 && (
           <div className="rounded-[22px] bg-white p-8 text-center shadow-sm">
             <p className="text-lg font-semibold text-[#10182f]">
@@ -116,7 +116,7 @@ export function ChatsPage() {
             </p>
           </div>
         )}
-  
+
         {!isLoading && !error && sortedChats.length > 0 && (
           <div className="grid gap-4">
             {sortedChats.map((chat) => (
@@ -132,7 +132,7 @@ export function ChatsPage() {
           </div>
         )}
       </div>
-  
+
       {selectedChat && (
         <ChatParticipantsModal
           chat={selectedChat}
