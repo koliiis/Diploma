@@ -53,6 +53,8 @@ export function CourseCard({
 }: CourseCardProps) {
   const isOwner = course.teacherId._id === currentUserId
   const showNonOwnerActions = course.teacherId._id !== currentUserId
+  const courseGroups = course.groups ?? []
+  const groupsText = courseGroups.length > 0 ? courseGroups.join(', ') : 'Не вказано'
 
   if (isEditing) {
     return (
@@ -160,7 +162,7 @@ export function CourseCard({
               </h3>
 
               <p className="mt-2 text-sm font-medium text-[#0b67a3]">
-                Групи: {course.groups.join(', ')}
+                Групи: {groupsText}
               </p>
             </div>
 
