@@ -124,7 +124,7 @@ export function CoursesPage() {
     setEditingCourseId(course._id)
     setEditTitle(course.title)
     setEditDescription(course.description)
-    setEditGroup(course.groups.join(', '))
+    setEditGroup(course.groups?.join(', ') ?? '')
     setEditImageUrl(course.imageUrl ?? '')
   }
 
