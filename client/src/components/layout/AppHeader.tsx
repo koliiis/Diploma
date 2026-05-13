@@ -14,7 +14,7 @@ export function AppHeader() {
   }
 
   return (
-    <header className=" top-0 z-50 h-[72px] border-b border-gray-100 bg-white">
+    <header className=" top-0 z-50 h-[72px] border-b border-b-solid border-gray-100 bg-white">
       <div className="flex h-full items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0b5f9f] text-lg font-bold text-white">
@@ -54,7 +54,7 @@ export function AppHeader() {
           <button
             type="button"
             onClick={handleLogout}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 transition hover:bg-gray-50 cursor-pointer"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-solid border-gray-200 bg-white text-gray-600 transition hover:bg-gray-50 cursor-pointer"
             title="Вийти"
           >
             <LogOut size={18} />

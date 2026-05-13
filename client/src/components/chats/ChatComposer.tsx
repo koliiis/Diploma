@@ -39,13 +39,13 @@ export function ChatComposer({
   }
 
   return (
-    <div className="border-t border-gray-100 bg-white p-3">
+    <div className="border-t border-solid border-gray-100 bg-white p-3">
       {selectedFiles.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-2">
           {selectedFiles.map((file) => (
             <div
               key={file.url}
-              className="rounded-2xl border border-gray-200 bg-[#f8fafc] p-2"
+              className="rounded-2xl border border-solid border-gray-200 bg-[#f8fafc] p-2"
             >
               {file.type.startsWith('image/') ? (
                 <img
@@ -76,7 +76,7 @@ export function ChatComposer({
       )}
 
       <div className="flex items-end gap-2">
-        <label className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50">
+        <label className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-solid border-gray-200 bg-white text-gray-600 hover:bg-gray-50">
           <PlusIcon className="h-4 w-4" />
           <input
             type="file"
@@ -114,7 +114,7 @@ export function ChatComposer({
           }}
           placeholder="Напишіть повідомлення..."
           rows={1}
-          className="max-h-[120px] flex-1 resize-none overflow-y-auto rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#0b67a3] focus:ring-4 focus:ring-[#0b67a3]/10"
+          className="max-h-[120px] flex-1 resize-none overflow-y-auto rounded-xl border border-solid border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#0b67a3] focus:ring-4 focus:ring-[#0b67a3]/10"
         />
 
         <button

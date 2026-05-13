@@ -71,7 +71,7 @@ export function DashboardPage() {
 
               <Link
                 to="/dashboard/chats"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-[#10182f] no-underline transition hover:bg-gray-50"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-solid border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-[#10182f] no-underline transition hover:bg-gray-50"
               >
                 Відкрити чати
                 <MessageCircle size={18} />

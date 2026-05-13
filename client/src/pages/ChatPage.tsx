@@ -111,10 +111,10 @@ function ChatPageView({ chatId }: { chatId: string | undefined }) {
 
   return (
     <div className="flex h-[calc(100vh-112px)] flex-col overflow-hidden rounded-[24px] bg-white shadow-sm lg:h-[calc(100vh-120px)]">
-      <div className="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+      <div className="flex items-center gap-3 border-b border-b-solid border-gray-100 px-4 py-3">
         <Link
           to="/dashboard/chats"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 no-underline hover:bg-gray-50"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-solid border-gray-200 bg-white text-gray-600 no-underline hover:bg-gray-50"
         >
           ←
         </Link>

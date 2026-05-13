@@ -111,7 +111,7 @@ export function ProfilePage() {
       <div className="overflow-hidden rounded-[32px] bg-gradient-to-r from-[#0b67a3] to-[#0f8bd7] p-8 text-white shadow-lg">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-5">
-            <div className="rounded-full border-4 border-white/20">
+            <div className="rounded-full border-4 border-solid border-white/20">
               <Avatar
                 fullName={fullName || user.fullName}
                 avatarUrl={avatarUrl}
@@ -162,7 +162,7 @@ export function ProfilePage() {
 
       <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
         <div className="rounded-[28px] bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between gap-4 border-b border-gray-100 pb-5">
+          <div className="flex items-center justify-between gap-4 border-b border-b-solid border-gray-100 pb-5">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-[#0b67a3]">
                 Особисті дані
@@ -175,7 +175,7 @@ export function ProfilePage() {
           </div>
 
           {success && (
-            <div className="mt-5 rounded-2xl border border-green-100 bg-green-50 px-4 py-3 text-sm text-green-700">
+            <div className="mt-5 rounded-2xl border border-solid border-green-100 bg-green-50 px-4 py-3 text-sm text-green-700">
               {success}
             </div>
           )}
@@ -235,7 +235,7 @@ export function ProfilePage() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Імʼя та прізвище"
-                  className="w-full rounded-2xl border border-gray-200 bg-[#f8fafc] px-4 py-3 outline-none transition focus:border-[#0b67a3] focus:ring-4 focus:ring-[#0b67a3]/10"
+                  className="w-full rounded-2xl border border-solid border-gray-200 bg-[#f8fafc] px-4 py-3 outline-none transition focus:border-[#0b67a3] focus:ring-4 focus:ring-[#0b67a3]/10"
                 />
 
                 {errors.fullName && (
@@ -267,7 +267,7 @@ export function ProfilePage() {
                       const dataUrl = await fileToDataUrl(file)
                       setAvatarUrl(dataUrl)
                     }}
-                    className="block w-full rounded-2xl border border-gray-200 bg-[#f8fafc] px-4 py-3 text-sm text-gray-600 file:mr-4 file:rounded-xl file:border-0 file:bg-[#0b67a3] file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-[#095a8d]"
+                    className="block w-full rounded-2xl border border-solid border-gray-200 bg-[#f8fafc] px-4 py-3 text-sm text-gray-600 file:mr-4 file:rounded-xl file:border-0 file:bg-[#0b67a3] file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-[#095a8d] cursor-pointer file:cursor-pointer"
                   />
                 </div>
               </div>
@@ -282,7 +282,7 @@ export function ProfilePage() {
                     value={group}
                     onChange={(e) => setGroup(e.target.value.toUpperCase())}
                     placeholder="ТР-25"
-                    className="w-full rounded-2xl border border-gray-200 bg-[#f8fafc] px-4 py-3 outline-none transition focus:border-[#0b67a3] focus:ring-4 focus:ring-[#0b67a3]/10"
+                    className="w-full rounded-2xl border border-solid border-gray-200 bg-[#f8fafc] px-4 py-3 outline-none transition focus:border-[#0b67a3] focus:ring-4 focus:ring-[#0b67a3]/10"
                   />
 
                   {errors.group && (
@@ -293,7 +293,7 @@ export function ProfilePage() {
                 </div>
               )}
 
-              <div className="rounded-3xl border border-gray-100 bg-[#f8fafc] p-5">
+              <div className="rounded-3xl border border-solid border-gray-100 bg-[#f8fafc] p-5">
                 <h3 className="text-lg font-bold text-[#10182f]">
                   Зміна пароля
                 </h3>
@@ -305,7 +305,7 @@ export function ProfilePage() {
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder="Поточний пароль"
-                      className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 outline-none transition focus:border-[#0b67a3] focus:ring-4 focus:ring-[#0b67a3]/10"
+                      className="w-full rounded-2xl border border-solid border-gray-200 bg-white px-4 py-3 outline-none transition focus:border-[#0b67a3] focus:ring-4 focus:ring-[#0b67a3]/10"
                     />
 
                     {errors.currentPassword && (
@@ -321,7 +321,7 @@ export function ProfilePage() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Новий пароль"
-                      className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 outline-none transition focus:border-[#0b67a3] focus:ring-4 focus:ring-[#0b67a3]/10"
+                      className="w-full rounded-2xl border border-solid border-gray-200 bg-white px-4 py-3 outline-none transition focus:border-[#0b67a3] focus:ring-4 focus:ring-[#0b67a3]/10"
                     />
 
                     {errors.newPassword && (
@@ -334,7 +334,7 @@ export function ProfilePage() {
               </div>
 
               {errors.general && (
-                <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+                <div className="rounded-2xl border border-solid border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
                   {errors.general}
                 </div>
               )}
@@ -344,7 +344,7 @@ export function ProfilePage() {
                   type="button"
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="rounded-2xl bg-[#0b67a3] px-6 py-3 font-semibold text-white transition hover:bg-[#095a8d] disabled:opacity-50"
+                  className="rounded-2xl bg-[#0b67a3] px-6 py-3 font-semibold text-white transition hover:bg-[#095a8d] disabled:opacity-50 cursor-pointer"
                 >
                   {isSaving ? 'Збереження...' : 'Зберегти зміни'}
                 </button>
@@ -353,7 +353,7 @@ export function ProfilePage() {
                   type="button"
                   onClick={handleCancel}
                   disabled={isSaving}
-                  className="rounded-2xl border border-gray-200 bg-white px-6 py-3 font-semibold text-gray-700 transition hover:bg-gray-50"
+                  className="rounded-2xl border border-solid border-gray-200 bg-white px-6 py-3 font-semibold text-gray-700 transition hover:bg-gray-50 cursor-pointer"
                 >
                   Скасувати
                 </button>

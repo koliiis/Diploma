@@ -113,7 +113,7 @@ export function RegisterPage() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+      <div className="rounded-3xl border border-solid border-gray-200 bg-white p-8 shadow-sm">
         <div className="mb-8">
           <p className="text-sm font-medium text-[#3157a4]">CampusTalk</p>
           <h1 className="mt-2 text-3xl font-bold text-[#172033]">Реєстрація</h1>
@@ -126,7 +126,7 @@ export function RegisterPage() {
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as 'student' | 'teacher')}
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
+            className="w-full rounded-xl border border-solid border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
           >
             <option value="student">Студент</option>
             <option value="teacher">Викладач</option>
@@ -137,7 +137,7 @@ export function RegisterPage() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Імʼя та прізвище"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
+              className="w-full rounded-xl border border-solid border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
             />
             {errors.fullName && (
               <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>
@@ -150,7 +150,7 @@ export function RegisterPage() {
                 value={group}
                 onChange={(e) => setGroup(e.target.value.toUpperCase())}
                 placeholder="Група, наприклад ТР-25"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
+                className="w-full rounded-xl border border-solid border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
               />
               {errors.group && (
                 <p className="mt-1 text-sm text-red-600">{errors.group}</p>
@@ -163,7 +163,7 @@ export function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Електронна адреса"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
+              className="w-full rounded-xl border border-solid border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
             />
             {errors.email && (
               <p className="mt-1 text-sm text-red-600">{errors.email}</p>
@@ -176,7 +176,7 @@ export function RegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Пароль"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
+              className="w-full rounded-xl border border-solid border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
             />
             {errors.password && (
               <p className="mt-1 text-sm text-red-600">{errors.password}</p>

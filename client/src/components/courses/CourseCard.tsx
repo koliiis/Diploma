@@ -100,7 +100,7 @@ export function CourseCard({
                 className={`${fieldClass} min-h-28 resize-none`}
               />
 
-              <label className="rounded-xl border border-dashed border-gray-300 bg-[#f8fafc] p-4 text-sm text-gray-600">
+              <label className="rounded-xl border border-dashed border-solid border-gray-300 bg-[#f8fafc] p-4 text-sm text-gray-600">
                 <span className="font-semibold text-[#10182f]">
                   Змінити зображення курсу
                 </span>
