@@ -89,7 +89,7 @@ export function ChatsPage() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Пошук за назвою, групою або останнім повідомленням..."
-          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-[#10182f] outline-none transition placeholder:text-gray-400 focus:border-[#0b67a3] focus:ring-4 focus:ring-[#0b67a3]/10"
+          className="w-full rounded-xl border border-solid border-gray-200 bg-white px-4 py-3 text-sm text-[#10182f] outline-none transition placeholder:text-gray-400 focus:border-[#0b67a3] focus:ring-4 focus:ring-[#0b67a3]/10"
         />
       </div>
 

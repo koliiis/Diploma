@@ -42,7 +42,7 @@ export function CourseParticipantsModal({
           {course.participants?.map((participant) => (
             <div
               key={participant._id}
-              className="flex items-center gap-3 rounded-lg border border-gray-200 p-3"
+              className="flex items-center gap-3 rounded-lg border border-solid border-gray-100 p-3"
             >
               <Avatar
                 fullName={participant.fullName}

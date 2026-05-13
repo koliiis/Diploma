@@ -44,7 +44,7 @@ export function LoginPage() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+      <div className="rounded-3xl border border-solid border-gray-200 bg-white p-8 shadow-sm">
         <div className="mb-8">
           <p className="text-sm font-medium text-[#3157a4]">CampusTalk</p>
           <h1 className="mt-2 text-3xl font-bold text-[#172033]">Увійти</h1>
@@ -59,7 +59,7 @@ export function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Логін або електронна пошта"
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
+            className="w-full rounded-xl border border-solid border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
           />
 
           <input
@@ -67,7 +67,7 @@ export function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Пароль"
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
+            className="w-full rounded-xl border border-solid border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
           />
 
           {error && (

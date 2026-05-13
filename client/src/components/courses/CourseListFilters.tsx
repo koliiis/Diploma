@@ -30,21 +30,23 @@ export function CourseListFilters({
         />
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <label className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-600">
+          <label className="flex items-center gap-2 rounded-xl border border-solid border-gray-200 px-4 py-3 text-sm text-gray-600 cursor-pointer">
             <input
               type="checkbox"
               checked={showOnlyMine}
               onChange={(e) => onShowOnlyMineChange(e.target.checked)}
+              className="cursor-pointer"
             />
             Мої курси
           </label>
 
           {canFilterByGroup && (
-            <label className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-600">
+            <label className="flex items-center gap-2 rounded-xl border border-solid border-gray-200 px-4 py-3 text-sm text-gray-600 cursor-pointer">
               <input
                 type="checkbox"
                 checked={showMyGroupOnly}
                 onChange={(e) => onShowMyGroupOnlyChange(e.target.checked)}
+                className="cursor-pointer"
               />
               Курси моєї групи
             </label>

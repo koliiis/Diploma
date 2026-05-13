@@ -37,7 +37,7 @@ export function AppSidebar() {
 
   return (
     <>
-      <aside className="sticky top-0 mt--72px hidden h-100vh w-[280px] shrink-0 border-r border-gray-100 bg-white px-3 py-6 lg:block">
+      <aside className="sticky top-0 mt--72px hidden h-100vh w-[280px] shrink-0 bg-white px-3 py-6 lg:block">
         <div className="flex items-center gap-3 mb-8">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0b5f9f] text-lg font-bold text-white">
             <GraduationCap size={24} />
@@ -78,7 +78,7 @@ export function AppSidebar() {
           })}
         </nav>
 
-        <div className="mt-6 border-t border-gray-100 pt-6">
+        <div className="mt-6 border-t border-t-solid border-gray-100 pt-6">
           <p className="px-4 text-xs font-semibold uppercase tracking-wide text-gray-400">
             Система
           </p>
@@ -97,7 +97,7 @@ export function AppSidebar() {
         </div>
       </aside>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 grid grid-cols-4 border-t border-gray-200 bg-white lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 grid grid-cols-4 border-t border-t-solid border-gray-200 bg-white lg:hidden">
         {navItems.map((item) => {
           const isActive = location.pathname === item.to
           const Icon = item.icon

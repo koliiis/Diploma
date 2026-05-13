@@ -69,7 +69,7 @@ export function ChatMessageList({
             type="button"
             onClick={onLoadEarlier}
             disabled={isLoadingEarlier}
-            className="rounded-full border border-gray-300 px-4 py-1 text-sm text-gray-600 disabled:opacity-50"
+            className="rounded-full border border-solid border-gray-300 px-4 py-1 text-sm text-gray-600 disabled:opacity-50"
           >
             {isLoadingEarlier ? 'Завантаження...' : 'Попередні повідомлення'}
           </button>
@@ -175,7 +175,7 @@ export function ChatMessageList({
                       <textarea
                         value={editText}
                         onChange={(e) => setEditText(e.target.value)}
-                        className="rounded border px-2 py-1 text-sm"
+                        className="rounded border border-solid px-2 py-1 text-sm"
                       />
 
                       <div className="flex gap-2 text-xs">
