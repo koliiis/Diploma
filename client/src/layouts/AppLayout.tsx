@@ -2,11 +2,15 @@ import { Outlet } from 'react-router-dom'
 import { AppHeader } from '../components/layout/AppHeader'
 import { useAutoLogout } from '../hooks/useAutoLogout'
 import { useIdleLogout } from '../hooks/useIdleLogout'
+import { useSocketAuth } from '../hooks/useSocketAuth'
+import { useSyncUserProfile } from '../hooks/useSyncUserProfile'
 import { AppSidebar } from '../components/layout/AppSidebar'
 
 export function AppLayout() {
   useAutoLogout()
   useIdleLogout()
+  useSocketAuth()
+  useSyncUserProfile()
 
   return (
     <div className="min-h-screen bg-[#f5f6fb] text-[#10182f]">

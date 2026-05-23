@@ -379,7 +379,11 @@ export function ProfilePage() {
                 </p>
 
                 <p className="mt-1 font-semibold text-[#10182f]">
-                  Активний користувач
+                  {user.isBlocked ? (
+                    <span className="text-red-600">Заблоковано</span>
+                  ) : (
+                    'Активний користувач'
+                  )}
                 </p>
               </div>
 

@@ -1,33 +1,38 @@
 import { Router } from 'express'
 import { UserModel } from '../models/user.model'
 import bcrypt from 'bcryptjs'
-import { authMiddleware, AuthRequest } from '../middleware/auth.middleware'
+import { authMiddleware } from '../middleware/auth.middleware'
+import type { AuthRequest } from '../middleware/auth.types'
 
 export const usersRouter = Router()
 
-usersRouter.post('/', async (_req, res) => {
+usersRouter.get('/me', authMiddleware, async (req: AuthRequest, res) => {
   try {
-    const user = await UserModel.create({
-      fullName: 'Test User',
-      email: `test-${Date.now()}@example.com`,
-      role: 'teacher',
+    const user = req.user
+
+    if (!user) {
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
+
+    const userDoc = await UserModel.findById(user.userId).select('-password')
+
+    if (!userDoc) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    res.json({
+      _id: userDoc._id,
+      fullName: userDoc.fullName,
+      email: userDoc.email,
+      role: userDoc.role,
+      avatarUrl: userDoc.avatarUrl,
+      group: userDoc.group,
+      isBlocked: userDoc.isBlocked === true,
+      blockedAt: userDoc.blockedAt ?? undefined,
     })
-
-    res.json(user)
   } catch (error) {
     console.error(error)
-    res.status(500).json({ error: 'Failed to create user' })
-  }
-})
-
-usersRouter.get('/', async (_req, res) => {
-  try {
-    const users = await UserModel.find().sort({ createdAt: -1 })
-
-    res.json(users)
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: 'Failed to fetch users' })
+    res.status(500).json({ error: 'Failed to fetch profile' })
   }
 })
 
@@ -90,6 +95,8 @@ usersRouter.patch('/me', authMiddleware, async (req: AuthRequest, res) => {
       role: userDoc.role,
       avatarUrl: userDoc.avatarUrl,
       group: userDoc.group,
+      isBlocked: userDoc.isBlocked === true,
+      blockedAt: userDoc.blockedAt ?? undefined,
     })
   } catch (error) {
     console.error(error)

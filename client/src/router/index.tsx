@@ -9,6 +9,7 @@ import { LoginPage } from '../pages/LoginPage'
 import { ProfilePage } from '../pages/ProfilePage'
 import { RegisterPage } from '../pages/RegisterPage'
 import { AuthRedirect } from './AuthRedirect'
+import { AdminRoute } from './AdminRoute'
 import { ProtectedRoute } from './ProtectedRoute'
 
 export const router = createBrowserRouter([
@@ -56,6 +57,10 @@ export const router = createBrowserRouter([
           {
             path: 'profile',
             element: <ProfilePage />,
+          },
+          {
+            path: 'admin',
+            element: <AdminRoute />,
           },
         ],
       },

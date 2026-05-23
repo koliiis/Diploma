@@ -1,17 +1,22 @@
 import type { AuthUser } from '../store/authStore'
 import { apiRequest } from './client'
 
-export type UserRole = 'student' | 'teacher'
+export type UserRole = 'student' | 'teacher' | 'admin'
 
 export type User = {
   _id: string
   fullName: string
   email: string
   role: UserRole
+  isBlocked: boolean
   avatarUrl?: string
   createdAt: string
   updatedAt: string
   group?: string
+}
+
+export async function getMyProfile(): Promise<AuthUser> {
+  return apiRequest<AuthUser>('/api/users/me')
 }
 
 export async function getUsers(): Promise<User[]> {

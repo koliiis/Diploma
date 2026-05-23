@@ -19,7 +19,7 @@ export type Message = {
 }
 
 export type MessageAttachment = {
-  url: string
+  url?: string
   name: string
   type: string
 }
@@ -28,6 +28,7 @@ export async function getMessages(params?: {
   chatId?: string
   before?: string
   limit?: number
+  includeAttachments?: boolean
 }): Promise<Message[]> {
   const searchParams = new URLSearchParams()
 
@@ -43,10 +44,45 @@ export async function getMessages(params?: {
     searchParams.set('limit', String(params.limit))
   }
 
+  if (params?.includeAttachments) {
+    searchParams.set('includeAttachments', 'true')
+  }
+
   const query = searchParams.toString()
   const endpoint = query ? `/api/messages?${query}` : '/api/messages'
 
   return apiRequest<Message[]>(endpoint)
+}
+
+export async function getMessageAttachment(
+  messageId: string,
+  index: number,
+): Promise<MessageAttachment> {
+  return apiRequest<MessageAttachment>(
+    `/api/messages/${messageId}/attachments/${index}`,
+  )
+}
+
+export type BatchAttachmentItem = {
+  messageId: string
+  index: number
+  url?: string
+  name: string
+  type: string
+}
+
+export async function getMessageAttachmentsBatch(
+  items: Array<{ messageId: string; index: number }>,
+): Promise<BatchAttachmentItem[]> {
+  const response = await apiRequest<{ attachments: BatchAttachmentItem[] }>(
+    '/api/messages/attachments/batch',
+    {
+      method: 'POST',
+      body: JSON.stringify({ items }),
+    },
+  )
+
+  return response.attachments
 }
 
 export async function createMessage(params: {

@@ -2,13 +2,15 @@ import { useEffect, useRef, useState, type RefObject } from 'react'
 import type { Message } from '../../api/messages'
 import { Avatar } from '../ui/Avatar'
 import { formatMessageDate, formatMessageTime } from '../../utils/dateFormat'
+import { MessageAttachmentItem } from './MessageAttachmentItem'
 import { MoreHorizontal } from 'lucide-react'
 
-type ChatUser = { _id: string } | null
+type ChatUser = { _id: string; role?: string } | null
 
 type ChatMessageListProps = {
   messagesRef: RefObject<HTMLDivElement | null>
   isLoading: boolean
+  isRefreshing?: boolean
   messages: Message[]
   hasMoreMessages: boolean
   isLoadingEarlier: boolean
@@ -20,9 +22,23 @@ type ChatMessageListProps = {
   onRetryMessage: (messageId: string) => void
 }
 
+function MessageSkeleton({ isMine }: { isMine: boolean }) {
+  return (
+    <div className={`flex items-end gap-2 ${isMine ? 'justify-end' : 'justify-start'}`}>
+      {!isMine && <div className="h-8 w-8 shrink-0 animate-pulse rounded-full bg-gray-200" />}
+      <div
+        className={`h-12 animate-pulse rounded-2xl bg-gray-200 ${
+          isMine ? 'w-40' : 'w-52'
+        }`}
+      />
+    </div>
+  )
+}
+
 export function ChatMessageList({
   messagesRef,
   isLoading,
+  isRefreshing = false,
   messages,
   hasMoreMessages,
   isLoadingEarlier,
@@ -37,6 +53,8 @@ export function ChatMessageList({
   const [editText, setEditText] = useState('')
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement | null>(null)
+  const showEmptyState = !isLoading && messages.length === 0
+  const showTopStatus = messages.length > 0 || isLoadingEarlier
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -57,34 +75,54 @@ export function ChatMessageList({
 
   return (
     <div
-      className="flex-1 space-y-2 overflow-y-auto bg-[#f8fafc] px-3 py-4 sm:px-5"
+      className="relative flex-1 overflow-y-auto bg-[#f8fafc] px-3 py-4 sm:px-5"
       ref={messagesRef}
       onScroll={onScroll}
     >
-      {isLoading && <p>Завантаження...</p>}
-
-      {hasMoreMessages && !isLoading && (
-        <div className="flex justify-center pb-2">
-          <button
-            type="button"
-            onClick={onLoadEarlier}
-            disabled={isLoadingEarlier}
-            className="rounded-full border border-solid border-gray-300 px-4 py-1 text-sm text-gray-600 disabled:opacity-50"
-          >
-            {isLoadingEarlier ? 'Завантаження...' : 'Попередні повідомлення'}
-          </button>
+      {isRefreshing && (
+        <div className="pointer-events-none sticky top-0 z-10 mb-2 flex justify-center">
+          <span className="rounded-full bg-white/95 px-3 py-1 text-xs text-gray-500 shadow-sm">
+            Оновлення...
+          </span>
         </div>
       )}
 
-      {!hasMoreMessages && (
-        <div className="flex justify-center pb-2">
-          <p className="text-sm text-gray-600">Повідомлень більше немає</p>
+      {showTopStatus && (
+        <div className="mb-2 flex min-h-9 justify-center">
+          {hasMoreMessages ? (
+            <button
+              type="button"
+              onClick={onLoadEarlier}
+              disabled={isLoadingEarlier}
+              className="rounded-full border border-solid border-gray-300 px-4 py-1 text-sm text-gray-600 disabled:opacity-50"
+            >
+              {isLoadingEarlier ? 'Завантаження...' : 'Попередні повідомлення'}
+            </button>
+          ) : (
+            <p className="py-1 text-sm text-gray-600">Повідомлень більше немає</p>
+          )}
         </div>
       )}
 
-      {!isLoading &&
-        messages.map((msg, index) => {
+      <div className="space-y-2">
+        {isLoading && messages.length === 0 && (
+          <>
+            <MessageSkeleton isMine={false} />
+            <MessageSkeleton isMine />
+            <MessageSkeleton isMine={false} />
+          </>
+        )}
+
+        {showEmptyState && (
+          <div className="flex min-h-40 items-center justify-center">
+            <p className="text-sm text-gray-500">Повідомлень ще немає</p>
+          </div>
+        )}
+
+        {messages.map((msg, index) => {
           const isMine = msg.authorId._id === currentUser?._id
+          const canManageMessage =
+            isMine || currentUser?.role === 'admin'
           const previousMessage = messages[index - 1]
           const shouldShowDateDivider =
             !previousMessage ||
@@ -114,10 +152,12 @@ export function ChatMessageList({
                   />
                 )}
 
-                {isMine && editingId !== msg._id && (
+                {canManageMessage && editingId !== msg._id && (
                   <div
                     ref={menuRef}
-                    className="relative mt-1 flex justify-end"
+                    className={`relative mt-1 flex ${
+                      isMine ? 'justify-end' : 'justify-start'
+                    }`}
                   >
                     <button
                       type="button"
@@ -126,13 +166,15 @@ export function ChatMessageList({
                           current === msg._id ? null : msg._id,
                         )
                       }
-                      className="cursor-pointer rounded-full px-2 py-0.5 text-xs opacity-70 hover:bg-white/20"
+                      className={`cursor-pointer rounded-full px-2 py-0.5 text-xs opacity-70 ${
+                        isMine ? 'hover:bg-white/20' : 'text-gray-500 hover:bg-gray-100'
+                      }`}
                     >
                       <MoreHorizontal size={16} />
                     </button>
 
                     {openMenuId === msg._id && (
-                      <div className="absolute right-0 bottom-full z-20 mb-1 min-w-32 overflow-hidden rounded-xl bg-white py-1 text-sm text-[#10182f] shadow-lg ring-1 ring-black/5">
+                      <div className="absolute left--3 bottom-full z-20 mb-1 min-w-32 overflow-hidden rounded-xl bg-white py-1 text-sm text-[#10182f] shadow-lg ring-1 ring-black/5">
                         <button
                           type="button"
                           onClick={() => {
@@ -197,31 +239,21 @@ export function ChatMessageList({
                         </p>
                       </div>
                     </div>
-                  ) : (
+                  ) : msg.content?.trim() ? (
                     <p className="whitespace-pre-wrap">{msg.content}</p>
-                  )}
+                  ) : null}
 
                   {msg.attachments && msg.attachments.length > 0 && (
-                    <div className="mt-2 grid gap-2">
-                      {msg.attachments.map((file) =>
-                        file.type.startsWith('image/') ? (
-                          <img
-                            key={file.url}
-                            src={file.url}
-                            alt={file.name}
-                            className="max-h-60 rounded-lg object-cover"
-                          />
-                        ) : (
-                          <a
-                            key={file.url}
-                            href={file.url}
-                            download={file.name}
-                            className="text-sm underline"
-                          >
-                            {file.name}
-                          </a>
-                        ),
-                      )}
+                    <div className={`grid gap-2 ${msg.content?.trim() ? 'mt-2' : ''}`}>
+                      {msg.attachments.map((file, fileIndex) => (
+                        <MessageAttachmentItem
+                          key={`${msg._id}-${fileIndex}-${file.name}`}
+                          messageId={msg._id}
+                          attachment={file}
+                          index={fileIndex}
+                          isMine={isMine}
+                        />
+                      ))}
                     </div>
                   )}
 
@@ -257,6 +289,7 @@ export function ChatMessageList({
             </div>
           )
         })}
+      </div>
     </div>
   )
 }

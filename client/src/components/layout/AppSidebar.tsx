@@ -7,7 +7,9 @@ import {
   Wifi,
   Bell,
   GraduationCap,
+  Shield,
 } from 'lucide-react'
+import { useAuthStore } from '../../store/authStore'
 
 const navItems = [
   {
@@ -34,7 +36,7 @@ const navItems = [
 
 export function AppSidebar() {
   const location = useLocation()
-
+  const { user } = useAuthStore()
   return (
     <>
       <aside className="sticky top-0 mt--72px hidden h-100vh w-[280px] shrink-0 bg-white px-3 py-6 lg:block">
@@ -76,6 +78,23 @@ export function AppSidebar() {
               </Link>
             )
           })}
+
+          {user?.role === 'admin' && (
+            <Link
+              to="/dashboard/admin"
+              className={`
+                flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold no-underline transition
+                ${
+                  location.pathname === '/dashboard/admin'
+                    ? 'bg-[#0b67a3] text-white shadow-sm'
+                    : 'text-gray-500 hover:bg-[#f5f6fb] hover:text-[#10182f]'
+                }
+              `}
+            >
+              <Shield size={20} />
+              Адмін
+            </Link>
+          )}
         </nav>
 
         <div className="mt-6 border-t border-t-solid border-gray-100 pt-6">
@@ -116,6 +135,13 @@ export function AppSidebar() {
             </Link>
           )
         })}
+
+        {user?.role === 'admin' && (
+          <Link to="/dashboard/admin" className="text-gray-600 hover:text-black flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold no-underline transition">
+            <Shield size={20} />
+            Адмін
+          </Link>
+        )}
       </nav>
     </>
   )

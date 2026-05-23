@@ -45,7 +45,7 @@ export function AppHeader() {
                   {user.fullName}
                 </p>
                 <p className="text-xs text-gray-500 m-0">
-                  {user.role === 'teacher' ? 'Викладач' : 'Студент'}
+                  {user.role === 'teacher' ? 'Викладач' : user.role === 'admin' ? 'Адмін' : 'Студент'}
                 </p>
               </div>
             </div>
