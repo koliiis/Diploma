@@ -15,7 +15,6 @@ export function RegisterPage() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState<'student' | 'teacher'>('student')
   const [group, setGroup] = useState('')
   const [errors, setErrors] = useState<RegisterErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -45,12 +44,10 @@ export function RegisterPage() {
         'Імʼя та прізвище мають бути українською, наприклад: Анна Коваленко'
     }
 
-    if (role === 'student') {
-      if (!trimmedGroup) {
-        nextErrors.group = 'Вкажіть групу'
-      } else if (!groupRegex.test(trimmedGroup)) {
-        nextErrors.group = 'Формат групи має бути як ТР-25'
-      }
+    if (!trimmedGroup) {
+      nextErrors.group = 'Вкажіть групу'
+    } else if (!groupRegex.test(trimmedGroup)) {
+      nextErrors.group = 'Формат групи має бути як ТР-25'
     }
 
     if (!trimmedEmail) {
@@ -89,8 +86,8 @@ export function RegisterPage() {
         fullName: trimmedFullName,
         email: trimmedEmail,
         password,
-        role,
-        group: role === 'student' ? trimmedGroup : undefined,
+        role: 'student',
+        group: trimmedGroup,
       })
 
       const loginData = await login({
@@ -118,20 +115,12 @@ export function RegisterPage() {
           <p className="text-sm font-medium text-[#3157a4]">CampusTalk</p>
           <h1 className="mt-2 text-3xl font-bold text-[#172033]">Реєстрація</h1>
           <p className="mt-3 text-sm leading-6 text-gray-500">
-            Створіть обліковий запис для доступу до курсів, чатів і повідомлень.
+            Створіть обліковий запис студента для доступу до курсів, чатів і
+            повідомлень.
           </p>
         </div>
 
         <div className="space-y-4">
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value as 'student' | 'teacher')}
-            className="w-full rounded-xl border border-solid border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
-          >
-            <option value="student">Студент</option>
-            <option value="teacher">Викладач</option>
-          </select>
-
           <div>
             <input
               value={fullName}
@@ -144,19 +133,17 @@ export function RegisterPage() {
             )}
           </div>
 
-          {role === 'student' && (
-            <div>
-              <input
-                value={group}
-                onChange={(e) => setGroup(e.target.value.toUpperCase())}
-                placeholder="Група, наприклад ТР-25"
-                className="w-full rounded-xl border border-solid border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
-              />
-              {errors.group && (
-                <p className="mt-1 text-sm text-red-600">{errors.group}</p>
-              )}
-            </div>
-          )}
+          <div>
+            <input
+              value={group}
+              onChange={(e) => setGroup(e.target.value.toUpperCase())}
+              placeholder="Група, наприклад ТР-25"
+              className="w-full rounded-xl border border-solid border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#3157a4] focus:ring-4 focus:ring-[#3157a4]/10"
+            />
+            {errors.group && (
+              <p className="mt-1 text-sm text-red-600">{errors.group}</p>
+            )}
+          </div>
 
           <div>
             <input

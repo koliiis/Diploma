@@ -154,6 +154,11 @@ export function CoursesPage() {
   }
 
   const handleJoinCourse = async (courseId: string) => {
+    if (user?.isBlocked) {
+      toast.error('Ваш акаунт заблоковано')
+      return
+    }
+
     try {
       await joinCourse(courseId)
       await refreshCourses()
@@ -193,7 +198,7 @@ export function CoursesPage() {
           </p>
         </div>
 
-        {isTeacher && (
+        {(isTeacher || user?.role === 'admin') && !user?.isBlocked && (
           <button
             type="button"
             onClick={() => setIsFormOpen((prev) => !prev)}
@@ -204,7 +209,13 @@ export function CoursesPage() {
         )}
       </div>
 
-      {isTeacher && isFormOpen && (
+      {(isTeacher || user?.role === 'admin') && user?.isBlocked && (
+        <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+          Ваш акаунт заблоковано. Створення курсів недоступне.
+        </p>
+      )}
+
+      {(isTeacher || user?.role === 'admin') && !user?.isBlocked && isFormOpen && (
         <CourseCreateForm
           title={title}
           groupsInput={groupsInput}
@@ -261,6 +272,8 @@ export function CoursesPage() {
                 key={course._id}
                 course={course}
                 currentUserId={user?._id}
+                isAdmin={user?.role === 'admin'}
+                isBlocked={Boolean(user?.isBlocked)}
                 isEditing={editingCourseId === course._id}
                 editTitle={editTitle}
                 editGroup={editGroup}

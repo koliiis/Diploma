@@ -1,45 +1,76 @@
 import type { Server } from 'socket.io'
+import { UserModel } from '../models/user.model'
+import { verifyAccessToken } from '../utils/jwt'
+import { isChatParticipant } from '../utils/chatAccess'
+import { isAdmin } from '../utils/permissions'
+
+type SocketData = {
+  userId: string
+  role: string
+  isBlocked: boolean
+}
 
 export function setupSocket(io: Server) {
-  io.on('connection', (socket) => {
-    console.log('User connected:', socket.id)
+  io.use(async (socket, next) => {
+    try {
+      const token = socket.handshake.auth?.token
 
-    socket.on('join-chat', (chatId: string) => {
+      if (!token || typeof token !== 'string') {
+        return next(new Error('Unauthorized'))
+      }
+
+      const decoded = verifyAccessToken(token)
+
+      if (!decoded) {
+        return next(new Error('Unauthorized'))
+      }
+
+      const userDoc = await UserModel.findById(decoded.userId).select('role isBlocked')
+
+      if (!userDoc) {
+        return next(new Error('Unauthorized'))
+      }
+
+      socket.data = {
+        userId: decoded.userId,
+        role: userDoc.role,
+        isBlocked: userDoc.isBlocked === true,
+      } satisfies SocketData
+
+      next()
+    } catch {
+      next(new Error('Unauthorized'))
+    }
+  })
+
+  io.on('connection', (socket) => {
+    const socketUser = socket.data as SocketData
+
+    console.log('User connected:', socket.id, socketUser.userId)
+
+    socket.on('join-chat', async (chatId: string) => {
+      if (!chatId || typeof chatId !== 'string') {
+        return
+      }
+
+      const allowed = await isChatParticipant(
+        socketUser.userId,
+        chatId,
+        socketUser.role,
+      )
+
+      if (!allowed) {
+        return
+      }
+
       socket.join(chatId)
     })
 
-    socket.on('send-message', (data) => {
-      const chatId =
-        typeof data.chatId === 'string'
-          ? data.chatId
-          : data.chatId?._id
-
-      if (!chatId) return
-
-      io.to(chatId).emit('new-message', data)
-
-      io.to(chatId).emit('chat-list-updated', {
-        chatId,
-        message: data,
-      })
-    })
-
-    socket.on('edit-message', (message) => {
-      const chatId =
-        typeof message.chatId === 'string'
-          ? message.chatId
-          : message.chatId?._id
-
-      if (!chatId) return
-
-      io.to(chatId).emit('message-edited', message)
-    })
-
-    socket.on('delete-message', ({ messageId, chatId }) => {
-      io.to(chatId).emit('message-deleted', { messageId, chatId })
-    })
-
     socket.on('typing', (chatId: string) => {
+      if (!chatId || typeof chatId !== 'string' || socketUser.isBlocked) {
+        return
+      }
+
       socket.to(chatId).emit('typing')
     })
 

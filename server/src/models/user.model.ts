@@ -7,6 +7,8 @@ export interface IUser extends Document {
   email: string
   password: string
   role: UserRole
+  isBlocked: boolean
+  blockedAt?: Date
   avatarUrl?: string
   createdAt: Date
   updatedAt: Date
@@ -30,8 +32,16 @@ const userSchema = new Schema<IUser>(
     },
     role: {
       type: String,
-      enum: ['student', 'teacher'],
+      enum: ['student', 'teacher', 'admin'],
       required: true,
+    },
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
+    blockedAt: {
+      type: Date,
+      default: null,
     },
     avatarUrl: {
       type: String,

@@ -10,9 +10,10 @@ export async function login(params: {
       _id: string
       fullName: string
       email: string
-      role: 'student' | 'teacher'
+      role: 'student' | 'teacher' | 'admin'
       avatarUrl?: string
       group?: string
+      isBlocked?: boolean
     }
   }>('/api/auth/login', {
     method: 'POST',

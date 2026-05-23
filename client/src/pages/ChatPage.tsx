@@ -18,6 +18,7 @@ function ChatPageView({ chatId }: { chatId: string | undefined }) {
   const {
     messages,
     isLoading,
+    isRefreshing,
     isSending,
     isLoadingEarlier,
     hasMoreMessages,
@@ -134,9 +135,17 @@ function ChatPageView({ chatId }: { chatId: string | undefined }) {
         </div>
       </div>
 
+      {currentUser?.isBlocked === true && (
+        <p className="border-b border-b-solid border-gray-100 bg-red-50 px-4 py-2 text-center text-xs text-red-600">
+          Нові повідомлення після блокування недоступні. Ви бачите лише історію до
+          моменту блокування.
+        </p>
+      )}
+
       <ChatMessageList
         messagesRef={messagesRef}
         isLoading={isLoading}
+        isRefreshing={isRefreshing}
         messages={messages}
         hasMoreMessages={hasMoreMessages}
         isLoadingEarlier={isLoadingEarlier}
@@ -153,6 +162,7 @@ function ChatPageView({ chatId }: { chatId: string | undefined }) {
         onChange={setMessageText}
         onSend={handleSend}
         isSending={isSending}
+        isBlocked={currentUser?.isBlocked === true}
         textareaRef={textareaRef}
         selectedFiles={selectedFiles}
         onFilesChange={setSelectedFiles}

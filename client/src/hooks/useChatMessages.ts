@@ -12,54 +12,116 @@ import {
   loadMessages as loadCachedMessages,
 } from '../utils/messagesStorage'
 import { mergeMessagesByIdChronological } from '../utils/mergeMessages'
+import {
+  cacheMessageAttachments,
+  hydrateMessagesFromAttachmentCache,
+  prefetchRecentAttachments,
+} from '../utils/attachmentCache'
+import { filterMessagesBeforeBlock, isMessageAfterBlock } from '../utils/blockedMessages'
+import {
+  getFileSizeLimitMessage,
+  isDataUrlWithinSizeLimit,
+} from '../utils/fileValidation'
+import { refreshAuthUserProfile } from '../hooks/useSyncUserProfile'
 import { useAuthStore } from '../store/authStore'
+import { ApiError } from '../api/client'
 import { socket } from '../socket'
 import toast from 'react-hot-toast'
 
 export function useChatMessages(chatId?: string) {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const currentUser = useAuthStore((s) => s.user)
+  const isBlocked = currentUser?.isBlocked === true
+  const blockedAt = currentUser?.blockedAt
+
+  const applyBlockFilter = useCallback(
+    (items: Message[]) =>
+      filterMessagesBeforeBlock(items, isBlocked, blockedAt),
+    [isBlocked, blockedAt],
+  )
+
+  const readCached = useCallback(() => {
+    if (!chatId) return []
+
+    return applyBlockFilter(loadCachedMessages(chatId))
+  }, [chatId, applyBlockFilter])
+
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (!chatId) return []
+
+    const user = useAuthStore.getState().user
+
+    return filterMessagesBeforeBlock(
+      loadCachedMessages(chatId),
+      user?.isBlocked === true,
+      user?.blockedAt,
+    )
+  })
+  const [isLoading, setIsLoading] = useState(() => {
+    if (!chatId) return true
+
+    return loadCachedMessages(chatId).length === 0
+  })
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [isSending, setIsSending] = useState(false)
   const [isLoadingEarlier, setIsLoadingEarlier] = useState(false)
   const [hasMoreMessages, setHasMoreMessages] = useState(true)
 
-  const currentUser = useAuthStore((s) => s.user)
   const syncRef = useRef<() => Promise<void>>(async () => {})
 
   const loadMessages = useCallback(async () => {
     if (!chatId) return
 
-    const cached = loadCachedMessages(chatId)
+    const cached = readCached()
+    const hasCachedMessages = cached.length > 0
 
-    if (cached.length > 0) {
-      setMessages(cached)
+    if (hasCachedMessages) {
       setIsLoading(false)
+      setIsRefreshing(true)
+    } else {
+      setIsLoading(true)
     }
 
     try {
+      if (hasCachedMessages) {
+        setMessages(cached)
+      }
+
       const data = await getMessages({
         chatId,
         limit: 30,
       })
 
-      await markMessagesAsRead(chatId)
-
-      const latestCached = loadCachedMessages(chatId)
-      const merged = mergeMessagesByIdChronological(latestCached, data)
+      const merged = applyBlockFilter(
+        mergeMessagesByIdChronological(readCached(), data),
+      )
 
       setMessages(merged)
       saveMessages(chatId, merged)
+
+      if (!isBlocked) {
+        void markMessagesAsRead(chatId)
+      }
+
+      void (async () => {
+        const hydrated = await hydrateMessagesFromAttachmentCache(merged)
+        setMessages(hydrated)
+
+        const withRecentAttachments = await prefetchRecentAttachments(hydrated)
+        setMessages(withRecentAttachments)
+        saveMessages(chatId, withRecentAttachments)
+      })()
     } catch {
-      if (cached.length === 0) {
+      if (!hasCachedMessages) {
         console.log('Офлайн: немає кешованих повідомлень')
       }
     } finally {
       setIsLoading(false)
+      setIsRefreshing(false)
     }
-  }, [chatId])
+  }, [chatId, isBlocked, readCached, applyBlockFilter])
 
   const syncPendingMessages = useCallback(async () => {
-    if (!chatId) return
+    if (!chatId || isBlocked) return
 
     const cached = loadCachedMessages(chatId)
     const pendingMessages = cached.filter(
@@ -78,12 +140,17 @@ export function useChatMessages(chatId?: string) {
           attachments: pendingMessage.attachments,
         })
 
-        socket.emit('send-message', savedMessage)
-
         currentMessages = currentMessages.map((m) =>
           m._id === pendingMessage._id
             ? { ...savedMessage, localStatus: 'sent' as const }
             : m,
+        )
+
+        void cacheMessageAttachments(
+          savedMessage._id,
+          savedMessage.attachments?.length
+            ? savedMessage.attachments
+            : pendingMessage.attachments,
         )
 
         setMessages(currentMessages)
@@ -94,7 +161,7 @@ export function useChatMessages(chatId?: string) {
     }
 
     await loadMessages()
-  }, [chatId, loadMessages])
+  }, [chatId, isBlocked, loadMessages])
 
   useEffect(() => {
     syncRef.current = syncPendingMessages
@@ -110,8 +177,22 @@ export function useChatMessages(chatId?: string) {
   ) => {
     if (!chatId) return
 
+    const profile = await refreshAuthUserProfile().catch(() => null)
+
+    if (profile?.isBlocked === true) {
+      toast.error('Ваш акаунт заблоковано')
+      return
+    }
+
     const trimmedText = text.trim()
     if (!trimmedText && attachments.length === 0) return
+
+    for (const attachment of attachments) {
+      if (!isDataUrlWithinSizeLimit(attachment.url)) {
+        toast.error(getFileSizeLimitMessage(attachment.name))
+        return
+      }
+    }
 
     const tempId = crypto.randomUUID()
 
@@ -146,20 +227,44 @@ export function useChatMessages(chatId?: string) {
         attachments,
       })
 
-      socket.emit('send-message', savedMessage)
-
       const updatedMessages = nextMessages.map((message) =>
         message._id === tempId
           ? {
               ...savedMessage,
+              attachments:
+                savedMessage.attachments?.length
+                  ? savedMessage.attachments
+                  : message.attachments,
               localStatus: 'sent' as const,
             }
           : message,
       )
 
+      void cacheMessageAttachments(
+        savedMessage._id,
+        updatedMessages.find((message) => message._id === savedMessage._id)
+          ?.attachments,
+      )
+
       setMessages(updatedMessages)
       saveMessages(chatId, updatedMessages)
-    } catch {
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast.error(error.message)
+      } else {
+        try {
+          const profile = await refreshAuthUserProfile()
+
+          if (profile?.isBlocked === true) {
+            toast.error('Ваш акаунт заблоковано')
+          } else {
+            toast.error('Не вдалося надіслати повідомлення')
+          }
+        } catch {
+          toast.error('Не вдалося надіслати повідомлення')
+        }
+      }
+
       const failedMessages = nextMessages.map((message) =>
         message._id === tempId
           ? {
@@ -187,8 +292,6 @@ export function useChatMessages(chatId?: string) {
         saveMessages(chatId!, next)
         return next
       })
-
-      socket.emit('edit-message', updated)
     } catch {
       toast.error('Не вдалося відредагувати повідомлення')
     }
@@ -203,8 +306,6 @@ export function useChatMessages(chatId?: string) {
         saveMessages(chatId!, next)
         return next
       })
-
-      socket.emit('delete-message', { messageId, chatId })
     } catch {
       toast.error('Не вдалося видалити повідомлення')
     }
@@ -229,10 +330,18 @@ export function useChatMessages(chatId?: string) {
         return
       }
 
-      const mergedMessages = [...earlierMessages, ...messages]
+      const mergedMessages = applyBlockFilter([...earlierMessages, ...messages])
 
       setMessages(mergedMessages)
       saveMessages(chatId, mergedMessages)
+
+      void (async () => {
+        const hydrated = await hydrateMessagesFromAttachmentCache(mergedMessages)
+        const withAttachments = await prefetchRecentAttachments(hydrated)
+
+        setMessages(withAttachments)
+        saveMessages(chatId, withAttachments)
+      })()
     } finally {
       setIsLoadingEarlier(false)
     }
@@ -264,8 +373,6 @@ export function useChatMessages(chatId?: string) {
         attachments: messageToRetry.attachments,
       })
 
-      socket.emit('send-message', savedMessage)
-
       const updatedMessages = pendingMessages.map((message) =>
         message._id === messageId
           ? {
@@ -275,9 +382,20 @@ export function useChatMessages(chatId?: string) {
           : message,
       )
 
+      void cacheMessageAttachments(
+        savedMessage._id,
+        savedMessage.attachments?.length
+          ? savedMessage.attachments
+          : messageToRetry.attachments,
+      )
+
       setMessages(updatedMessages)
       saveMessages(chatId, updatedMessages)
-    } catch {
+    } catch (error) {
+      if (error instanceof ApiError) {
+        toast.error(error.message)
+      }
+
       const failedMessages = pendingMessages.map((message) =>
         message._id === messageId
           ? {
@@ -291,6 +409,19 @@ export function useChatMessages(chatId?: string) {
       saveMessages(chatId, failedMessages)
     }
   }
+
+  useEffect(() => {
+    if (!chatId || !isBlocked || !blockedAt) return
+
+    setMessages((prev) => {
+      const filtered = applyBlockFilter(prev)
+
+      if (filtered.length === prev.length) return prev
+
+      saveMessages(chatId, filtered)
+      return filtered
+    })
+  }, [chatId, isBlocked, blockedAt, applyBlockFilter])
 
   useEffect(() => {
     if (!chatId) {
@@ -307,6 +438,10 @@ export function useChatMessages(chatId?: string) {
     if (!chatId) return
 
     async function handleNewMessage(message: Message) {
+      if (isBlocked) return
+
+      if (isMessageAfterBlock(message.createdAt, isBlocked, blockedAt)) return
+
       const messageChatId =
         typeof message.chatId === 'string'
           ? message.chatId
@@ -315,13 +450,18 @@ export function useChatMessages(chatId?: string) {
       if (messageChatId !== chatId) return
 
       void markMessagesAsRead(chatId)
+      void cacheMessageAttachments(message._id, message.attachments)
+
+      const [hydratedMessage] = await hydrateMessagesFromAttachmentCache([message])
 
       setMessages((prev) => {
         const alreadyExists = prev.some((m) => m._id === message._id)
 
         if (alreadyExists) return prev
 
-        const nextMessages = mergeMessagesByIdChronological(prev, [message])
+        const nextMessages = applyBlockFilter(
+          mergeMessagesByIdChronological(prev, [hydratedMessage]),
+        )
         saveMessages(chatId, nextMessages)
 
         return nextMessages
@@ -333,23 +473,16 @@ export function useChatMessages(chatId?: string) {
     return () => {
       socket.off('new-message', handleNewMessage)
     }
-  }, [chatId])
-
-  useEffect(() => {
-    const handleOnline = () => {
-      void syncRef.current()
-    }
-
-    window.addEventListener('online', handleOnline)
-    return () => {
-      window.removeEventListener('online', handleOnline)
-    }
-  }, [])
+  }, [chatId, isBlocked, blockedAt, applyBlockFilter])
 
   useEffect(() => {
     if (!chatId) return
 
     function handleEdit(message: Message) {
+      if (isBlocked || isMessageAfterBlock(message.createdAt, isBlocked, blockedAt)) {
+        return
+      }
+
       if (message.chatId._id !== chatId) return
 
       setMessages((prev) =>
@@ -372,11 +505,23 @@ export function useChatMessages(chatId?: string) {
       socket.off('message-edited', handleEdit)
       socket.off('message-deleted', handleDelete)
     }
-  }, [chatId])
+  }, [chatId, isBlocked, blockedAt])
+
+  useEffect(() => {
+    const handleOnline = () => {
+      void syncRef.current()
+    }
+
+    window.addEventListener('online', handleOnline)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+    }
+  }, [])
 
   return {
     messages,
     isLoading,
+    isRefreshing,
     isSending,
     isLoadingEarlier,
     hasMoreMessages,

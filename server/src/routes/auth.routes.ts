@@ -1,23 +1,17 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import { UserModel } from '../models/user.model'
-import jwt from 'jsonwebtoken'
+import { signAccessToken } from '../utils/jwt'
 
 export const authRouter = Router()
 
 authRouter.post('/register', async (req, res) => {
   try {
-    const { fullName, email, password, role, group } = req.body
+    const { fullName, email, password, group } = req.body
 
-    if (!fullName || !email || !password || !role) {
+    if (!fullName || !email || !password || !group) {
       return res.status(400).json({
         error: 'All fields are required',
-      })
-    }
-
-    if (role === 'student' && !group) {
-      return res.status(400).json({
-        error: 'Group is required for students',
       })
     }
 
@@ -35,8 +29,8 @@ authRouter.post('/register', async (req, res) => {
       fullName,
       email,
       password: hashedPassword,
-      role,
-      group: role === 'student' ? group : undefined,
+      role: 'student',
+      group,
     })
 
     res.json({
@@ -78,24 +72,16 @@ authRouter.post('/login', async (req, res) => {
       })
     }
 
-    const jwtSecret = process.env.JWT_SECRET
-
-    if (!jwtSecret) {
-      return res.status(500).json({
-        error: 'JWT_SECRET is not configured',
+    if (user.isBlocked) {
+      return res.status(403).json({
+        error: 'User is blocked',
       })
     }
 
-    const token = jwt.sign(
-      {
-        userId: user._id,
-        role: user.role,
-      },
-      jwtSecret,
-      {
-        expiresIn: '7d',
-      },
-    )
+    const token = signAccessToken({
+      userId: user._id.toString(),
+      role: user.role,
+    })
 
     res.json({
       token,
@@ -106,6 +92,7 @@ authRouter.post('/login', async (req, res) => {
         role: user.role,
         avatarUrl: user.avatarUrl || undefined,
         group: user.group || undefined,
+        isBlocked: user.isBlocked,
       },
     })
   } catch (error) {

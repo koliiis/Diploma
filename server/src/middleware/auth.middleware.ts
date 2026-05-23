@@ -1,16 +1,9 @@
-import { NextFunction, Request, Response } from 'express'
-import jwt from 'jsonwebtoken'
+import { NextFunction, Response } from 'express'
+import { UserModel } from '../models/user.model'
+import { verifyAccessToken } from '../utils/jwt'
+import { AuthRequest } from './auth.types'
 
-type JwtPayload = {
-  userId: string
-  role: 'student' | 'teacher'
-}
-
-export type AuthRequest = Request & {
-  user?: JwtPayload
-}
-
-export function authMiddleware(
+export async function authMiddleware(
   req: AuthRequest,
   res: Response,
   next: NextFunction,
@@ -22,17 +15,27 @@ export function authMiddleware(
   }
 
   const token = authHeader.split(' ')[1]
-  const jwtSecret = process.env.JWT_SECRET
+  const decoded = verifyAccessToken(token)
 
-  if (!jwtSecret) {
-    return res.status(500).json({ error: 'JWT_SECRET is not configured' })
+  if (!decoded) {
+    return res.status(401).json({ error: 'Invalid token' })
   }
 
   try {
-    const decoded = jwt.verify(token, jwtSecret) as JwtPayload
-    req.user = decoded
+    const userDoc = await UserModel.findById(decoded.userId).select('role isBlocked')
+
+    if (!userDoc) {
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
+
+    req.user = {
+      userId: decoded.userId,
+      role: userDoc.role,
+      isBlocked: userDoc.isBlocked === true,
+    }
+
     next()
   } catch {
-    return res.status(401).json({ error: 'Invalid token' })
+    return res.status(500).json({ error: 'Failed to authenticate user' })
   }
 }

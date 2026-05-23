@@ -10,9 +10,11 @@ export type AuthUser = {
   _id: string
   fullName: string
   email: string
-  role: 'student' | 'teacher'
+  role: 'student' | 'teacher' | 'admin'
   group?: string
   avatarUrl?: string
+  isBlocked?: boolean
+  blockedAt?: string
 }
 
 type AuthState = {
@@ -39,8 +41,27 @@ function isTokenExpired(token: string | null): boolean {
   }
 }
 
+export function normalizeAuthUser(user: AuthUser): AuthUser {
+  if (user.isBlocked === true) {
+    return {
+      ...user,
+      isBlocked: true,
+    }
+  }
+
+  return {
+    ...user,
+    isBlocked: false,
+    blockedAt: undefined,
+  }
+}
+
+type PersistedAuthState = Pick<AuthState, 'token' | 'isAuthenticated'> & {
+  user: Omit<AuthUser, 'isBlocked' | 'blockedAt'> | null
+}
+
 export const useAuthStore = create<AuthState>()(
-  persist<AuthState>(
+  persist<AuthState, [], [], PersistedAuthState>(
     (set, get) => ({
       user: null,
       token: null,
@@ -48,7 +69,7 @@ export const useAuthStore = create<AuthState>()(
 
       setAuth: (user, token) =>
         set({
-          user,
+          user: normalizeAuthUser(user),
           token,
           isAuthenticated: true,
         }),
@@ -66,11 +87,36 @@ export const useAuthStore = create<AuthState>()(
 
       updateUser: (user) =>
         set({
-          user,
+          user: normalizeAuthUser(user),
         }),
     }),
     {
       name: 'campustalk-auth',
+      partialize: (state) => ({
+        user: state.user
+          ? {
+              _id: state.user._id,
+              fullName: state.user.fullName,
+              email: state.user.email,
+              role: state.user.role,
+              group: state.user.group,
+              avatarUrl: state.user.avatarUrl,
+            }
+          : null,
+        token: state.token,
+        isAuthenticated: state.isAuthenticated,
+      }),
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted as PersistedAuthState),
+        user: (persisted as PersistedAuthState).user
+          ? {
+              ...(persisted as PersistedAuthState).user,
+              isBlocked: false,
+              blockedAt: undefined,
+            }
+          : null,
+      }),
     },
   ),
 )

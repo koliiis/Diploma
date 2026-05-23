@@ -21,7 +21,9 @@ export function ChatListItem({
 }: ChatListItemProps) {
   const { imageUrl, title } = getChatListDisplay(chat, currentUserId)
   const isCourseChat = chat.type !== 'direct'
-  const lastMessagePreview = chat.lastMessage?.content.replace(/\s+/g, ' ')
+  const lastMessagePreview =
+    chat.lastMessage?.content?.replace(/\s+/g, ' ').trim() ||
+    (chat.lastMessage?.attachments?.length ? '📎 Файл' : '')
 
   return (
     <Link

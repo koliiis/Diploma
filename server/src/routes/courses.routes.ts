@@ -1,11 +1,19 @@
 import { Router } from 'express'
 import { CourseModel } from '../models/course.model'
 import { ChatModel } from '../models/chat.model'
-import { authMiddleware, type AuthRequest } from '../middleware/auth.middleware'
+import { MessageModel } from '../models/message.model'
+import { authMiddleware } from '../middleware/auth.middleware'
+import { rejectIfBlocked } from '../middleware/blocked.middleware'
+import { isAdmin, isOwnerOrAdmin } from '../utils/permissions'
+import type { AuthRequest } from '../middleware/auth.types'
 
 export const coursesRouter = Router()
 
-coursesRouter.post('/', authMiddleware, async (req: AuthRequest, res) => {
+function canManageCourses(role: string | undefined) {
+  return role === 'teacher' || isAdmin(role)
+}
+
+coursesRouter.post('/', authMiddleware, rejectIfBlocked, async (req: AuthRequest, res) => {
   try {
     const { title, description, groups, imageUrl } = req.body
 
@@ -29,7 +37,7 @@ coursesRouter.post('/', authMiddleware, async (req: AuthRequest, res) => {
 
     const user = req.user
 
-    if (!user || user.role !== 'teacher') {
+    if (!user || !canManageCourses(user.role)) {
       return res.status(403).json({
         error: 'Only teachers can create courses',
       })
@@ -58,7 +66,7 @@ coursesRouter.post('/', authMiddleware, async (req: AuthRequest, res) => {
   }
 })
 
-coursesRouter.post('/:courseId/join', authMiddleware, async (req: AuthRequest, res) => {
+coursesRouter.post('/:courseId/join', authMiddleware, rejectIfBlocked, async (req: AuthRequest, res) => {
   try {
     const { courseId } = req.params
     const user = req.user
@@ -133,7 +141,11 @@ coursesRouter.get('/', authMiddleware, async (req: AuthRequest, res) => {
             return participantId === user?.userId
           })
 
-          const isJoined = isCourseOwner || isStudentJoined || isChatParticipant
+          const isJoined =
+            isAdmin(user?.role) ||
+            isCourseOwner ||
+            isStudentJoined ||
+            isChatParticipant
 
           const membersCount = chat?.participantIds.length ?? course.studentIds.length + 1
 
@@ -161,7 +173,7 @@ coursesRouter.patch('/:courseId', authMiddleware, async (req: AuthRequest, res) 
 
     const user = req.user
 
-    if (!user || user.role !== 'teacher') {
+    if (!user || !canManageCourses(user.role)) {
       return res.status(403).json({ error: 'Only teachers can edit courses' })
     }
 
@@ -171,7 +183,7 @@ coursesRouter.patch('/:courseId', authMiddleware, async (req: AuthRequest, res) 
       return res.status(404).json({ error: 'Course not found' })
     }
 
-    if (course.teacherId.toString() !== user.userId) {
+    if (!isOwnerOrAdmin(user, course.teacherId.toString())) {
       return res.status(403).json({ error: 'You can edit only your own courses' })
     }
 
@@ -197,6 +209,13 @@ coursesRouter.patch('/:courseId', authMiddleware, async (req: AuthRequest, res) 
 
     await course.save()
 
+    if (title !== undefined) {
+      await ChatModel.updateMany(
+        { courseId: course._id, type: 'course' },
+        { title: course.title },
+      )
+    }
+
     res.json(course)
   } catch (error) {
     console.error(error)
@@ -209,7 +228,7 @@ coursesRouter.delete('/:courseId', authMiddleware, async (req: AuthRequest, res)
     const { courseId } = req.params
     const user = req.user
 
-    if (!user || user.role !== 'teacher') {
+    if (!user || !canManageCourses(user.role)) {
       return res.status(403).json({ error: 'Only teachers can delete courses' })
     }
 
@@ -219,8 +238,16 @@ coursesRouter.delete('/:courseId', authMiddleware, async (req: AuthRequest, res)
       return res.status(404).json({ error: 'Course not found' })
     }
 
-    if (course.teacherId.toString() !== user.userId) {
+    if (!isOwnerOrAdmin(user, course.teacherId.toString())) {
       return res.status(403).json({ error: 'You can delete only your own courses' })
+    }
+
+    const courseChats = await ChatModel.find({ courseId: course._id })
+    const chatIds = courseChats.map((chat) => chat._id)
+
+    if (chatIds.length > 0) {
+      await MessageModel.deleteMany({ chatId: { $in: chatIds } })
+      await ChatModel.deleteMany({ _id: { $in: chatIds } })
     }
 
     await course.deleteOne()

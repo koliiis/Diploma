@@ -11,6 +11,8 @@ import {
 type CourseCardProps = {
   course: Course
   currentUserId: string | undefined
+  isAdmin: boolean
+  isBlocked: boolean
   isEditing: boolean
   editTitle: string
   editGroup: string
@@ -33,6 +35,8 @@ type CourseCardProps = {
 export function CourseCard({
   course,
   currentUserId,
+  isAdmin,
+  isBlocked,
   isEditing,
   editTitle,
   editGroup,
@@ -52,7 +56,8 @@ export function CourseCard({
   onOpenParticipants,
 }: CourseCardProps) {
   const isOwner = course.teacherId._id === currentUserId
-  const showNonOwnerActions = course.teacherId._id !== currentUserId
+  const canManage = isOwner || isAdmin
+  const showNonOwnerActions = !canManage
   const courseGroups = course.groups ?? []
   const groupsText = courseGroups.length > 0 ? courseGroups.join(', ') : 'Не вказано'
 
@@ -198,7 +203,7 @@ export function CourseCard({
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-2">
-            {isOwner && (
+            {canManage && (
               <>
                 <button
                   type="button"
@@ -230,7 +235,7 @@ export function CourseCard({
 
             {showNonOwnerActions && (
               <>
-                {!course.isJoined && (
+                {!course.isJoined && !isBlocked && (
                   <button
                     type="button"
                     onClick={() => onJoin(course._id)}
@@ -238,6 +243,12 @@ export function CourseCard({
                   >
                     Приєднатися
                   </button>
+                )}
+
+                {!course.isJoined && isBlocked && (
+                  <p className="text-sm text-red-600">
+                    Приєднання недоступне для заблокованого акаунта
+                  </p>
                 )}
 
                 {course.isJoined && course.chatId && (

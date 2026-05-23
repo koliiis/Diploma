@@ -31,6 +31,10 @@ export type Chat = {
       email: string
       avatarUrl?: string
     } | null
+    attachments?: Array<{
+      name: string
+      type: string
+    }>
   }
   lastMessageAt?: string
 }
@@ -42,5 +46,21 @@ export async function getChats(): Promise<Chat[]> {
 export async function createDirectChat(userId: string): Promise<Chat> {
   return apiRequest<Chat>(`/api/chats/direct/${userId}`, {
     method: 'POST',
+  })
+}
+
+export async function updateChat(
+  chatId: string,
+  params: { title: string },
+): Promise<Chat> {
+  return apiRequest<Chat>(`/api/chats/${chatId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(params),
+  })
+}
+
+export async function deleteChat(chatId: string): Promise<{ ok: boolean }> {
+  return apiRequest<{ ok: boolean }>(`/api/chats/${chatId}`, {
+    method: 'DELETE',
   })
 }

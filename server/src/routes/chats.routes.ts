@@ -1,40 +1,16 @@
 import { Router } from 'express'
 import { authMiddleware, type AuthRequest } from '../middleware/auth.middleware'
 import { ChatModel } from '../models/chat.model'
-import { CourseModel } from '../models/course.model'
 import { MessageModel } from '../models/message.model'
 import { UserModel } from '../models/user.model'
+import { isAdmin } from '../utils/permissions'
+import {
+  applyMessageCutoffFilter,
+  getMessageCutoffDate,
+} from '../utils/blockedMessages'
+import { serializeMessageForResponse } from '../utils/serializeMessage'
 
 export const chatsRouter = Router()
-
-chatsRouter.post('/', async (_req, res) => {
-  try {
-    const course = await CourseModel.findOne().sort({ createdAt: -1 })
-
-    if (!course) {
-      return res.status(400).json({
-        error: 'Create a course first',
-      })
-    }
-
-    const participantIds = [
-      course.teacherId,
-      ...course.studentIds,
-    ]
-
-    const chat = await ChatModel.create({
-      title: `${course.title} Chat`,
-      type: 'course',
-      courseId: course._id,
-      participantIds,
-    })
-
-    res.json(chat)
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: 'Failed to create chat' })
-  }
-})
 
 chatsRouter.get('/', authMiddleware, async (req: AuthRequest, res) => {
   try {
@@ -44,31 +20,54 @@ chatsRouter.get('/', authMiddleware, async (req: AuthRequest, res) => {
       return res.status(401).json({ error: 'Unauthorized' })
     }
 
-    const chats = await ChatModel.find({
-      participantIds: user.userId,
-    })
+    const chats = await ChatModel.find(
+      isAdmin(user.role) ? {} : { participantIds: user.userId },
+    )
       .populate('courseId', 'title description groups imageUrl')
       .populate('participantIds', 'fullName email role avatarUrl')
       .sort({ createdAt: -1 })
 
+    const userDoc = await UserModel.findById(user.userId).select(
+      'isBlocked blockedAt updatedAt',
+    )
+    const messageCutoff = userDoc ? getMessageCutoffDate(userDoc) : null
+
     const result = await Promise.all(
       chats.map(async (chat) => {
-        const unreadCount = await MessageModel.countDocuments({
+        const unreadFilter: {
+          chatId: typeof chat._id
+          authorId: { $ne: string }
+          readByIds: { $ne: string }
+          createdAt?: Record<string, Date>
+        } = {
           chatId: chat._id,
           authorId: { $ne: user.userId },
           readByIds: { $ne: user.userId },
-        })
+        }
 
-        const lastMessage = await MessageModel.findOne({
+        applyMessageCutoffFilter(unreadFilter, messageCutoff)
+
+        const unreadCount = await MessageModel.countDocuments(unreadFilter)
+
+        const lastMessageFilter: {
+          chatId: typeof chat._id
+          createdAt?: Record<string, Date>
+        } = {
           chatId: chat._id,
-        })
+        }
+
+        applyMessageCutoffFilter(lastMessageFilter, messageCutoff)
+
+        const lastMessage = await MessageModel.findOne(lastMessageFilter)
           .sort({ createdAt: -1 })
           .populate('authorId', 'fullName email avatarUrl')
 
         return {
           ...chat.toObject(),
           unreadCount,
-          lastMessage,
+          lastMessage: serializeMessageForResponse(lastMessage, {
+            includeAttachmentData: false,
+          }),
           lastMessageAt: lastMessage?.createdAt ?? chat.createdAt,
         }
       }),
@@ -131,5 +130,60 @@ chatsRouter.post('/direct/:userId', authMiddleware, async (req: AuthRequest, res
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Failed to create direct chat' })
+  }
+})
+
+chatsRouter.patch('/:chatId', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const { chatId } = req.params
+    const { title } = req.body
+    const user = req.user
+
+    if (!user || !isAdmin(user.role)) {
+      return res.status(403).json({ error: 'Admin access only' })
+    }
+
+    if (!title?.trim()) {
+      return res.status(400).json({ error: 'title is required' })
+    }
+
+    const chat = await ChatModel.findById(chatId)
+
+    if (!chat) {
+      return res.status(404).json({ error: 'Chat not found' })
+    }
+
+    chat.title = title.trim()
+    await chat.save()
+
+    res.json(chat)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Failed to update chat' })
+  }
+})
+
+chatsRouter.delete('/:chatId', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const { chatId } = req.params
+    const user = req.user
+
+    if (!user || !isAdmin(user.role)) {
+      return res.status(403).json({ error: 'Admin access only' })
+    }
+
+    const chat = await ChatModel.findById(chatId)
+
+    if (!chat) {
+      return res.status(404).json({ error: 'Chat not found' })
+    }
+
+    await MessageModel.deleteMany({ chatId: chat._id })
+    await chat.deleteOne()
+
+    res.json({ ok: true })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Failed to delete chat' })
   }
 })
