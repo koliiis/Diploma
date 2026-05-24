@@ -1,5 +1,6 @@
 import { Router } from 'express'
-import { authMiddleware, type AuthRequest } from '../middleware/auth.middleware'
+import { authMiddleware } from '../middleware/auth.middleware'
+import type { AuthRequest } from '../middleware/auth.types'
 import { ChatModel } from '../models/chat.model'
 import { MessageModel } from '../models/message.model'
 import { UserModel } from '../models/user.model'
