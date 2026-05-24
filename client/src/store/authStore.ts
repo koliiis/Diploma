@@ -60,6 +60,23 @@ type PersistedAuthState = Pick<AuthState, 'token' | 'isAuthenticated'> & {
   user: Omit<AuthUser, 'isBlocked' | 'blockedAt'> | null
 }
 
+function restorePersistedUser(
+  stored: PersistedAuthState['user'],
+): AuthUser | null {
+  if (!stored) {
+    return null
+  }
+
+  return normalizeAuthUser({
+    _id: stored._id,
+    fullName: stored.fullName,
+    email: stored.email,
+    role: stored.role,
+    group: stored.group,
+    avatarUrl: stored.avatarUrl,
+  })
+}
+
 export const useAuthStore = create<AuthState>()(
   persist<AuthState, [], [], PersistedAuthState>(
     (set, get) => ({
@@ -106,17 +123,16 @@ export const useAuthStore = create<AuthState>()(
         token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
-      merge: (persisted, current) => ({
-        ...current,
-        ...(persisted as PersistedAuthState),
-        user: (persisted as PersistedAuthState).user
-          ? {
-              ...(persisted as PersistedAuthState).user,
-              isBlocked: false,
-              blockedAt: undefined,
-            }
-          : null,
-      }),
+      merge: (persisted, current): AuthState => {
+        const stored = persisted as PersistedAuthState
+
+        return {
+          ...current,
+          token: stored.token ?? current.token,
+          isAuthenticated: stored.isAuthenticated ?? current.isAuthenticated,
+          user: restorePersistedUser(stored.user),
+        }
+      },
     },
   ),
 )
