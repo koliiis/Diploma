@@ -93,10 +93,12 @@ function ChatPageView({ chatId }: { chatId: string | undefined }) {
   }
 
   const handleSend = async () => {
+    const text = messageText
+    const files = selectedFiles
+
+    if (!text.trim() && files.length === 0) return
+
     shouldScrollToBottomRef.current = true
-
-    await sendMessage(messageText, selectedFiles)
-
     setMessageText('')
     setSelectedFiles([])
 
@@ -104,6 +106,8 @@ function ChatPageView({ chatId }: { chatId: string | undefined }) {
     if (el) {
       el.style.height = 'auto'
     }
+
+    await sendMessage(text, files)
   }
 
   const chatDisplay = chat

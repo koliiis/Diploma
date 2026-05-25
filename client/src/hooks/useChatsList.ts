@@ -15,9 +15,18 @@ export function useChatsList() {
   const { data, refetch } = listState
 
   useEffect(() => {
-    data.forEach((chat) => {
-      socket.emit('join-chat', chat._id)
-    })
+    const joinAll = () => {
+      data.forEach((chat) => {
+        socket.emit('join-chat', chat._id)
+      })
+    }
+
+    joinAll()
+    socket.on('connect', joinAll)
+
+    return () => {
+      socket.off('connect', joinAll)
+    }
   }, [data])
 
   useEffect(() => {

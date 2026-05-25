@@ -4,6 +4,16 @@ import { socket } from '../socket'
 export function useSocketJoinChat(chatId: string | undefined) {
   useEffect(() => {
     if (!chatId) return
-    socket.emit('join-chat', chatId)
+
+    const join = () => {
+      socket.emit('join-chat', chatId)
+    }
+
+    join()
+    socket.on('connect', join)
+
+    return () => {
+      socket.off('connect', join)
+    }
   }, [chatId])
 }

@@ -1,5 +1,35 @@
 import type { Message } from '../api/messages'
 
+function isLocalOnlyMessage(message: Message): boolean {
+  return (
+    message.localStatus === 'pending' || message.localStatus === 'failed'
+  )
+}
+
+/** Keeps pending/failed and out-of-window cache rows; server list is authoritative in-window. */
+export function mergeCachedWithServerSnapshot(
+  cached: Message[],
+  server: Message[],
+): Message[] {
+  if (server.length === 0) {
+    return cached.filter(isLocalOnlyMessage)
+  }
+
+  const serverIds = new Set(server.map((m) => m._id))
+  const oldestServer = new Date(server[0].createdAt).getTime()
+  const newestServer = new Date(server[server.length - 1].createdAt).getTime()
+
+  const cachedToMerge = cached.filter((m) => {
+    if (serverIds.has(m._id)) return true
+    if (isLocalOnlyMessage(m)) return true
+
+    const createdAt = new Date(m.createdAt).getTime()
+    return createdAt < oldestServer || createdAt > newestServer
+  })
+
+  return mergeMessagesByIdChronological(cachedToMerge, server)
+}
+
 function pickPreferredMessage(existing: Message, incoming: Message): Message {
   const existingAttachments = existing.attachments?.length ?? 0
   const incomingAttachments = incoming.attachments?.length ?? 0
