@@ -85,10 +85,6 @@ export function useChatMessages(chatId?: string) {
     }
 
     try {
-      if (hasCachedMessages) {
-        setMessages(cached)
-      }
-
       const data = await getMessages({
         chatId,
         limit: 30,
@@ -476,6 +472,9 @@ export function useChatMessages(chatId?: string) {
         const [hydratedMessage] = await hydrateMessagesFromAttachmentCache([
           message,
         ])
+        const [withAttachments] = await prefetchRecentAttachments([
+          hydratedMessage,
+        ])
 
         setMessages((prev) => {
           const index = prev.findIndex((m) => m._id === message._id)
@@ -483,7 +482,7 @@ export function useChatMessages(chatId?: string) {
           if (index === -1) return prev
 
           const next = [...prev]
-          next[index] = hydratedMessage
+          next[index] = withAttachments
           saveMessages(chatId, next)
           return next
         })
