@@ -84,9 +84,12 @@ messagesRouter.post('/', authMiddleware, rejectIfBlocked, async (req: AuthReques
       .populate('chatId', 'title')
 
     const serialized = serializeMessageForResponse(populatedMessage)
+    const socketPayload = serializeMessageForResponse(populatedMessage, {
+      includeAttachmentData: false,
+    })
 
-    if (serialized) {
-      emitNewMessage(serialized as Record<string, unknown>)
+    if (socketPayload) {
+      emitNewMessage(socketPayload as Record<string, unknown>)
     }
 
     res.json(serialized)
@@ -375,9 +378,12 @@ messagesRouter.patch(
         .populate('chatId', 'title')
 
       const serialized = serializeMessageForResponse(populatedMessage)
+      const socketPayload = serializeMessageForResponse(populatedMessage, {
+        includeAttachmentData: false,
+      })
 
-      if (serialized) {
-        emitEditedMessage(serialized as Record<string, unknown>)
+      if (socketPayload) {
+        emitEditedMessage(socketPayload as Record<string, unknown>)
       }
 
       res.json(serialized)

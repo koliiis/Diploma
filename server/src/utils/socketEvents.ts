@@ -1,22 +1,46 @@
 import { getIo } from '../socket/ioInstance'
 
-function extractChatId(message: Record<string, unknown>): string | null {
-  const chatId = message.chatId
-
-  if (typeof chatId === 'string') {
-    return chatId
+function normalizeId(value: unknown): string | null {
+  if (value == null) {
+    return null
   }
 
-  if (
-    chatId &&
-    typeof chatId === 'object' &&
-    '_id' in chatId &&
-    typeof chatId._id === 'string'
-  ) {
-    return chatId._id
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : null
+  }
+
+  if (typeof value !== 'object') {
+    return null
+  }
+
+  const ctor = (value as { constructor?: { name?: string } }).constructor?.name
+
+  if (ctor === 'ObjectId' || ctor === 'ObjectID') {
+    return String(value)
+  }
+
+  if ('_id' in value) {
+    const inner = (value as { _id: unknown })._id
+
+    if (inner !== value) {
+      return normalizeId(inner)
+    }
+  }
+
+  if (typeof (value as { toString: () => string }).toString === 'function') {
+    const asString = (value as { toString: () => string }).toString()
+
+    if (/^[a-f\d]{24}$/i.test(asString)) {
+      return asString
+    }
   }
 
   return null
+}
+
+function extractChatId(message: Record<string, unknown>): string | null {
+  return normalizeId(message.chatId)
 }
 
 export function emitNewMessage(message: Record<string, unknown>) {
