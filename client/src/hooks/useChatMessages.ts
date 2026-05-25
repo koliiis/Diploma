@@ -11,7 +11,10 @@ import {
   saveMessages,
   loadMessages as loadCachedMessages,
 } from '../utils/messagesStorage'
-import { mergeMessagesByIdChronological } from '../utils/mergeMessages'
+import {
+  mergeCachedWithServerSnapshot,
+  mergeMessagesByIdChronological,
+} from '../utils/mergeMessages'
 import {
   cacheMessageAttachments,
   hydrateMessagesFromAttachmentCache,
@@ -92,7 +95,7 @@ export function useChatMessages(chatId?: string) {
       })
 
       const merged = applyBlockFilter(
-        mergeMessagesByIdChronological(readCached(), data),
+        mergeCachedWithServerSnapshot(readCached(), data),
       )
 
       setMessages(merged)
@@ -177,9 +180,7 @@ export function useChatMessages(chatId?: string) {
   ) => {
     if (!chatId) return
 
-    const profile = await refreshAuthUserProfile().catch(() => null)
-
-    if (profile?.isBlocked === true) {
+    if (currentUser?.isBlocked === true) {
       toast.error('Ваш акаунт заблоковано')
       return
     }
@@ -217,6 +218,12 @@ export function useChatMessages(chatId?: string) {
 
     setMessages(nextMessages)
     saveMessages(chatId, nextMessages)
+
+    void refreshAuthUserProfile().then((profile) => {
+      if (profile?.isBlocked === true) {
+        toast.error('Ваш акаунт заблоковано')
+      }
+    })
 
     try {
       setIsSending(true)
@@ -437,7 +444,7 @@ export function useChatMessages(chatId?: string) {
   useEffect(() => {
     if (!chatId) return
 
-    async function handleNewMessage(message: Message) {
+    function handleNewMessage(message: Message) {
       if (isBlocked) return
 
       if (isMessageAfterBlock(message.createdAt, isBlocked, blockedAt)) return
@@ -452,20 +459,35 @@ export function useChatMessages(chatId?: string) {
       void markMessagesAsRead(chatId)
       void cacheMessageAttachments(message._id, message.attachments)
 
-      const [hydratedMessage] = await hydrateMessagesFromAttachmentCache([message])
-
       setMessages((prev) => {
         const alreadyExists = prev.some((m) => m._id === message._id)
 
         if (alreadyExists) return prev
 
         const nextMessages = applyBlockFilter(
-          mergeMessagesByIdChronological(prev, [hydratedMessage]),
+          mergeMessagesByIdChronological(prev, [message]),
         )
         saveMessages(chatId, nextMessages)
 
         return nextMessages
       })
+
+      void (async () => {
+        const [hydratedMessage] = await hydrateMessagesFromAttachmentCache([
+          message,
+        ])
+
+        setMessages((prev) => {
+          const index = prev.findIndex((m) => m._id === message._id)
+
+          if (index === -1) return prev
+
+          const next = [...prev]
+          next[index] = hydratedMessage
+          saveMessages(chatId, next)
+          return next
+        })
+      })()
     }
 
     socket.on('new-message', handleNewMessage)
@@ -485,17 +507,21 @@ export function useChatMessages(chatId?: string) {
 
       if (message.chatId._id !== chatId) return
 
-      setMessages((prev) =>
-        prev.map((m) => (m._id === message._id ? message : m)),
-      )
+      setMessages((prev) => {
+        const next = prev.map((m) => (m._id === message._id ? message : m))
+        saveMessages(chatId, next)
+        return next
+      })
     }
 
     function handleDelete(data: { messageId: string; chatId: string }) {
       if (data.chatId !== chatId) return
 
-      setMessages((prev) =>
-        prev.filter((m) => m._id !== data.messageId),
-      )
+      setMessages((prev) => {
+        const next = prev.filter((m) => m._id !== data.messageId)
+        saveMessages(chatId, next)
+        return next
+      })
     }
 
     socket.on('message-edited', handleEdit)
